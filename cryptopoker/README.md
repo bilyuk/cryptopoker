@@ -1,6 +1,7 @@
 # CryptoPoker Monorepo Scaffold
 
 This repository is scaffolded for shared API contracts across backend and web clients.
+Canonical remote: `https://github.com/bilyuk/cryptopoker`.
 
 ## Workspace layout
 

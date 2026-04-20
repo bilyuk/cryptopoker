@@ -15,6 +15,7 @@
     "clean": "pnpm -r clean",
     "bootstrap:local": "./scripts/bootstrap-local.sh",
     "ops:enforce-main-protection": "./scripts/enforce-main-pr-workflow.sh",
+    "ops:verify-workspace-alias": "./scripts/verify-workspace-alias.sh",
     "figma:mcp:verify": "./scripts/verify-figma-mcp.sh",
     "mvp:websocket": "pnpm --filter @cryptopoker/backend-api mvp:websocket"
   },

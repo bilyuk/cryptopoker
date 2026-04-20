@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify workspace alias compatibility
+        run: pnpm ops:verify-workspace-alias
+
       - name: Lint
         run: pnpm lint
 

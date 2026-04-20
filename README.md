@@ -10,6 +10,20 @@ Canonical remote: `https://github.com/bilyuk/cryptopoker`.
 - `ui/web-app`: web app foundation consuming shared schema package
 - `infra`: local dependency definitions and baseline migration
 
+## Workspace compatibility alias
+
+To keep older Paperclip workspace links working after the repository root move
+(`.../_default/cryptopoker` -> `.../_default`), this repository includes a
+legacy alias symlink at repo root:
+
+- `cryptopoker -> .`
+
+Verification command:
+
+```bash
+pnpm ops:verify-workspace-alias
+```
+
 ## Quick start
 
 ```bash
@@ -71,5 +85,6 @@ UI validation steps: `ui/web-table-foundation/README.md`.
 - `docs/ops/observability-baseline.md`: traces, metrics, alert thresholds, and dashboard baseline
 - `docs/ops/incident-runbook.md`: incident triage + mitigation + rollback playbooks
 - `docs/ops/mvp-launch-checklist.md`: reliability/security launch gates
+- `docs/ops/workspace-path-migration.md`: repo root migration compatibility and rollout notes
 - `docs/ops/workspace-governance.md`: ownership model, CI checks, and branch protection defaults
 - `docs/ops/figma-mcp-runbook.md`: Figma MCP setup, verification, and usage workflow

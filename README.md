@@ -72,4 +72,5 @@ UI validation steps: `ui/web-table-foundation/README.md`.
 - `docs/ops/incident-runbook.md`: incident triage + mitigation + rollback playbooks
 - `docs/ops/mvp-launch-checklist.md`: reliability/security launch gates
 - `docs/ops/workspace-governance.md`: ownership model, CI checks, and branch protection defaults
+- `docs/ops/pr-only-single-repo-policy.md`: canonical repo and PR-only merge policy
 - `docs/ops/figma-mcp-runbook.md`: Figma MCP setup, verification, and usage workflow

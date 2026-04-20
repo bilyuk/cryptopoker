@@ -5,6 +5,7 @@
   "description": "CryptoPoker MVP monorepo scaffold",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
+    "dev": "./scripts/dev-mvp-websocket.sh",
     "lint": "eslint \"{contracts,server,ui}/**/*.{ts,js,mjs}\"",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",

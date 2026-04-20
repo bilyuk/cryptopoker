@@ -40,11 +40,32 @@ Then:
 pnpm build
 ```
 
+### Local dev hot-reload
+
+Prerequisites:
+
+- Node.js 20+ (for native `node --watch`)
+- pnpm 10+
+
+Run:
+
+```bash
+npm run dev
+```
+
+This starts a backend TypeScript watch build and runs the websocket MVP server in Node watch mode so backend edits hot-reload automatically.
+By default it uses port `3000`. To override:
+
+```bash
+CRYPTOPOKER_MVP_PORT=3300 npm run dev
+```
+
 ## Useful commands
 
 - `pnpm lint`: run ESLint across contracts/backend/web packages
 - `pnpm build`: compile all workspace packages
 - `pnpm typecheck`: run strict TS checks across workspaces
+- `npm run dev`: local backend hot-reload (`tsc --watch` + `node --watch`) for the websocket MVP server
 - `pnpm test`: run backend/web test suites, including websocket handshake/chat smoke coverage
 - `pnpm contracts:test`: run Solidity unit tests for escrow/payout contracts
 - `pnpm contracts:deploy:base-sepolia`: deploy `BaseEscrowSettlement` to Base Sepolia

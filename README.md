@@ -35,6 +35,7 @@ pnpm build
 - `pnpm contracts:test`: run Solidity unit tests for escrow/payout contracts
 - `pnpm contracts:deploy:base-sepolia`: deploy `BaseEscrowSettlement` to Base Sepolia
 - `pnpm figma:mcp:verify`: verify Figma MCP endpoint reachability for this project
+- `pnpm ops:enforce-main-protection`: apply PR-only branch protection defaults to `main`
 - `pnpm mvp:websocket`: build and run the websocket-ready MVP baseline server
 - `pnpm clean`: remove build artifacts
 

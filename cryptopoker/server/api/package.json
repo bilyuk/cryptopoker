@@ -1,0 +1,23 @@
+{
+  "name": "@cryptopoker/backend-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "mvp:websocket": "npm run build && node dist/mvp-server.js"
+  },
+  "dependencies": {
+    "@cryptopoker/api-schema": "workspace:*",
+    "express": "^4.21.2",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/express": "^4.17.23",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.9.2"
+  }
+}

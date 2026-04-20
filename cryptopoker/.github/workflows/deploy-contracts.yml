@@ -1,0 +1,68 @@
+name: Deploy Settlement Contracts
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: "Deployment network"
+        required: true
+        default: "baseSepolia"
+        type: choice
+        options:
+          - baseSepolia
+          - base
+      verify:
+        description: "Verify on Basescan"
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  deploy:
+    name: Deploy BaseEscrowSettlement
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.network }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile contracts
+        run: pnpm contracts:build
+
+      - name: Deploy contract
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_MAINNET_RPC_URL: ${{ secrets.BASE_MAINNET_RPC_URL }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          ESCROW_OWNER_ADDRESS: ${{ secrets.ESCROW_OWNER_ADDRESS }}
+          BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
+          VERIFY_CONTRACT: ${{ inputs.verify && 'true' || 'false' }}
+        run: |
+          if [ "${{ inputs.network }}" = "base" ]; then
+            pnpm --filter @cryptopoker/settlement-contracts deploy:base
+          else
+            pnpm --filter @cryptopoker/settlement-contracts deploy:base-sepolia
+          fi
+
+      - name: Upload deployment metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: settlement-deployment-${{ inputs.network }}
+          path: contracts/settlement/deployments/${{ inputs.network }}.base-escrow-settlement.json
+          if-no-files-found: error

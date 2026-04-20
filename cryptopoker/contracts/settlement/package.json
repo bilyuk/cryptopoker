@@ -1,0 +1,19 @@
+{
+  "name": "@cryptopoker/settlement-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "clean": "hardhat clean && rm -rf deployments artifacts cache",
+    "deploy:base-sepolia": "hardhat run scripts/deploy-base-escrow-settlement.js --network baseSepolia",
+    "deploy:base": "hardhat run scripts/deploy-base-escrow-settlement.js --network base"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.1.0",
+    "@nomicfoundation/hardhat-verify": "^2.1.2",
+    "dotenv": "^16.6.1",
+    "ethers": "^6.15.0",
+    "hardhat": "^2.26.5"
+  }
+}

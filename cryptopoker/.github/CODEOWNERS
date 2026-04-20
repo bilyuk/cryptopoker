@@ -1,0 +1,7 @@
+* @paperclip/cto
+
+/contracts/ @paperclip/cto @paperclip/researcher
+/server/ @paperclip/cto
+/ui/ @paperclip/cto
+/infra/ @paperclip/cto
+/docs/ @paperclip/cto @paperclip/researcher

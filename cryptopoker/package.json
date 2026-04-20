@@ -1,0 +1,26 @@
+{
+  "name": "cryptopoker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "CryptoPoker MVP monorepo scaffold",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "lint": "eslint \"{contracts,server,ui}/**/*.{ts,js,mjs}\"",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @cryptopoker/settlement-contracts test && pnpm build && node --test server/api/test/**/*.test.mjs ui/web-app/test/**/*.test.mjs",
+    "contracts:build": "pnpm --filter @cryptopoker/settlement-contracts build",
+    "contracts:test": "pnpm --filter @cryptopoker/settlement-contracts test",
+    "contracts:deploy:base-sepolia": "pnpm --filter @cryptopoker/settlement-contracts deploy:base-sepolia",
+    "clean": "pnpm -r clean",
+    "bootstrap:local": "./scripts/bootstrap-local.sh",
+    "figma:mcp:verify": "./scripts/verify-figma-mcp.sh",
+    "mvp:websocket": "pnpm --filter @cryptopoker/backend-api mvp:websocket"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.4.0",
+    "typescript-eslint": "^8.46.2"
+  }
+}

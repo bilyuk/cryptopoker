@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CryptoPoker Realtime MVP Client</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-bg"></div>
+    <main class="table-app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CryptoPoker</p>
+          <h1>Figma-Driven Realtime MVP Client</h1>
+        </div>
+        <div class="topbar-actions session-controls">
+          <label>
+            <span class="label">Display Name</span>
+            <input id="display-name-input" type="text" maxlength="32" placeholder="alice" />
+          </label>
+          <label>
+            <span class="label">Room</span>
+            <input id="room-name-input" type="text" maxlength="64" placeholder="Velvet" />
+          </label>
+          <button id="join-btn" class="primary">Join Room</button>
+        </div>
+      </header>
+
+      <section id="status-banner" class="status-banner hidden"></section>
+
+      <section class="layout-grid">
+        <article class="table-shell">
+          <div class="table-meta">
+            <div>
+              <span class="label">Room ID</span>
+              <p id="room-id-label">-</p>
+            </div>
+            <div>
+              <span class="label">Phase</span>
+              <p id="phase-label">idle</p>
+            </div>
+            <div>
+              <span class="label">Status</span>
+              <p id="connection-label">disconnected</p>
+            </div>
+            <div>
+              <span class="label">Players</span>
+              <p id="player-count-label">0/4</p>
+            </div>
+          </div>
+
+          <div class="felt">
+            <section id="villain-seat" class="seat seat-villain">
+              <h2 id="villain-name">Waiting for opponent</h2>
+              <p class="stack" data-role="stack">-</p>
+              <p class="contrib" data-role="contrib">Seat: -</p>
+              <p class="seat-state" data-role="state">Waiting</p>
+            </section>
+
+            <section id="hero-seat" class="seat seat-hero">
+              <h2 id="hero-name">You</h2>
+              <p class="stack" data-role="stack">-</p>
+              <p class="contrib" data-role="contrib">Seat: -</p>
+              <p class="seat-state" data-role="state">Disconnected</p>
+            </section>
+          </div>
+
+          <section class="action-panel">
+            <h3>Realtime Chat + Protocol Validation</h3>
+            <div class="chat-bar">
+              <input id="chat-input" type="text" maxlength="240" placeholder="Send a message to the table" />
+              <button id="send-chat-btn" class="primary">Send Chat</button>
+            </div>
+            <div class="action-buttons">
+              <button id="send-invalid-json-btn" data-kind="fold">Send Invalid JSON</button>
+              <button id="send-invalid-message-btn" data-kind="fold">Send Invalid Message</button>
+            </div>
+          </section>
+        </article>
+
+        <aside class="status-rail">
+          <section>
+            <h3>Event Log</h3>
+            <ol id="event-log" class="event-log"></ol>
+          </section>
+          <section class="network-controls">
+            <h3>Connection</h3>
+            <button id="disconnect-btn" class="ghost">Disconnect Socket</button>
+            <button id="reconnect-btn" class="ghost">Reconnect Socket</button>
+            <button id="clear-log-btn" class="ghost">Clear Log</button>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,8 +1,10 @@
 .next/
+.turbo/
 storybook-static/
 node_modules/
 dist/
 coverage/
+*.tsbuildinfo
 .env*.local
 npm-debug.log*
 yarn-debug.log*

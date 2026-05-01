@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { API_HEALTH_PATH } from "@cryptopoker/contracts";
 import { CreateRoomScreen } from "@/components/aurum/screens/create-room-screen";
 import { InviteScreen } from "@/components/aurum/screens/invite-screen";
 import { LobbyScreen } from "@/components/aurum/screens/lobby-screen";
@@ -57,7 +58,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-sapphire-950 text-ivory-100">
+    <div className="min-h-screen overflow-x-hidden bg-sapphire-950 text-ivory-100" data-api-health-path={API_HEALTH_PATH}>
       <Backdrop />
       {screen === "welcome" && <WelcomeScreen onEnter={enterLobby} />}
       {screen === "lobby" && (

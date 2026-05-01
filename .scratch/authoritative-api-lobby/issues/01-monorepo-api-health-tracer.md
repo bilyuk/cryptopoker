@@ -1,6 +1,6 @@
 # Monorepo API Health Tracer
 
-Status: needs-triage
+Status: ready-for-human
 
 ## Parent
 
@@ -12,12 +12,12 @@ Create the first end-to-end monorepo tracer: the existing web app remains runnab
 
 ## Acceptance criteria
 
-- [ ] The repo uses pnpm workspaces and Turborepo with separate web, API, and shared contract workspaces.
-- [ ] The existing Next frontend still builds and runs from its workspace.
-- [ ] The NestJS API exposes a health endpoint that can be called locally.
-- [ ] The API has a TypeORM/Postgres configuration path without requiring feature modules to be implemented yet.
-- [ ] The shared contracts package can be imported by both the web and API workspaces.
-- [ ] Workspace-level build and test commands run successfully.
+- [x] The repo uses pnpm workspaces and Turborepo with separate web, API, and shared contract workspaces.
+- [x] The existing Next frontend still builds and runs from its workspace.
+- [x] The NestJS API exposes a health endpoint that can be called locally.
+- [x] The API has a TypeORM/Postgres configuration path without requiring feature modules to be implemented yet.
+- [x] The shared contracts package can be imported by both the web and API workspaces.
+- [x] Workspace-level build and test commands run successfully.
 
 ## Blocked by
 

@@ -2,7 +2,7 @@ import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { API_HEALTH_PATH, createHealthResponse } from "@cryptopoker/contracts";
-import { AppModule } from "../src/app.module";
+import { AppModule } from "../src/app.module.js";
 
 describe("API health endpoint", () => {
   it("returns the shared health contract", async () => {

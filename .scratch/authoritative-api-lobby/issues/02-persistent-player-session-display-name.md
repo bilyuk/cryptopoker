@@ -1,6 +1,6 @@
 # Persistent Player Session and Display Name
 
-Status: needs-triage
+Status: ready-for-human
 
 ## Parent
 
@@ -12,14 +12,14 @@ Add browser-persistent guest identity. A Player can create or resume a persisten
 
 ## Acceptance criteria
 
-- [ ] A new browser can create a guest session with a Display Name.
-- [ ] The API sets a persistent httpOnly session cookie and uses it to authenticate later REST requests.
-- [ ] Returning with the same cookie resolves to the same Player.
-- [ ] Two browsers may choose the same Display Name while remaining distinct Players.
-- [ ] A Player can fetch their current Player state.
-- [ ] A Player can update their current Display Name outside Live Hand concerns.
-- [ ] The welcome flow uses server-backed Player identity instead of local-only state.
-- [ ] Tests cover session creation, session reuse, non-unique Display Names, and Display Name updates.
+- [x] A new browser can create a guest session with a Display Name.
+- [x] The API sets a persistent httpOnly session cookie and uses it to authenticate later REST requests.
+- [x] Returning with the same cookie resolves to the same Player.
+- [x] Two browsers may choose the same Display Name while remaining distinct Players.
+- [x] A Player can fetch their current Player state.
+- [x] A Player can update their current Display Name outside Live Hand concerns.
+- [x] The welcome flow uses server-backed Player identity instead of local-only state.
+- [x] Tests cover session creation, session reuse, non-unique Display Names, and Display Name updates.
 
 ## Blocked by
 

@@ -1,6 +1,6 @@
 # Seat Offers from Waitlist
 
-Status: needs-triage
+Status: ready-for-agent
 
 ## Parent
 
@@ -12,14 +12,14 @@ When a Seat opens, create a Seat Offer for the first eligible waitlisted Player.
 
 ## Acceptance criteria
 
-- [ ] Opening a Seat creates a Seat Offer for the first eligible Player on the Waitlist.
-- [ ] A Seat Offer does not immediately occupy the Seat.
-- [ ] The offered Player can accept the Seat Offer and become seated.
-- [ ] The offered Player can decline the Seat Offer.
-- [ ] An expired or declined Seat Offer advances to the next eligible waitlisted Player.
-- [ ] A Player who is no longer eligible cannot accept an old Seat Offer.
+- [x] Opening a Seat creates a Seat Offer for the first eligible Player on the Waitlist.
+- [x] A Seat Offer does not immediately occupy the Seat.
+- [x] The offered Player can accept the Seat Offer and become seated.
+- [x] The offered Player can decline the Seat Offer.
+- [x] An expired or declined Seat Offer advances to the next eligible waitlisted Player.
+- [x] A Player who is no longer eligible cannot accept an old Seat Offer.
 - [ ] The UI shows the targeted Seat Offer state to the offered Player.
-- [ ] Tests cover offer creation, accept, decline, expiry, advancement, and stale offer rejection.
+- [x] Tests cover offer creation, accept, decline, expiry, advancement, and stale offer rejection.
 
 ## Blocked by
 

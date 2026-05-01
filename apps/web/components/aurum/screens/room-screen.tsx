@@ -43,7 +43,7 @@ export function RoomScreen({ playerName, room, onBackToLobby, onDeal, onInvitePr
               <b className="aurum-eyebrow text-champagne-500">Invite link</b>
               <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto] md:grid-cols-1 lg:grid-cols-[1fr_auto_auto]">
                 <p className="overflow-hidden rounded-lg bg-sapphire-950/70 px-3 py-3 font-mono text-xs text-gold-400">
-                  cryptopoker.game/r/VELVET-8F3K2
+                  cryptopoker.game/r/{room.inviteCode ?? room.id}
                 </p>
                 <AurumButton className="min-h-10 px-4" onClick={onInvitePreview}>
                   <Copy size={14} />

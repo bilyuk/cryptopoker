@@ -1,6 +1,6 @@
 # PRD: Authoritative API Foundation and Realtime Room Lobby
 
-Status: needs-triage
+Status: ready-for-agent
 
 ## Problem Statement
 
@@ -135,3 +135,9 @@ The first implementation slice stops before Live Hand play and settlement. It sh
 This PRD follows the domain glossary in the project context and the recorded ADRs for the authoritative game server, Host-Verified Buy-Ins, REST plus Socket.IO, monorepo structure, pnpm plus Turborepo, NestJS, Socket.IO gateways, Postgres plus TypeORM, persistent guest session cookies, and single-parameter REST routes.
 
 The first implementation slice is intentionally a multiplayer lobby foundation. It should make the existing frontend real enough for Players and Room Hosts to coordinate private Rooms, Buy-Ins, Seats, Waitlists, and Seat Offers before the project implements the poker engine.
+
+## Implementation progress
+
+- API behavior for guest Player sessions, private Rooms, Invite Links, Host-Verified Buy-Ins, Seats, Waitlists, Seat Offers, and Socket.IO Room/Player events is implemented and covered by integration tests.
+- The web app now creates/resumes Player sessions, creates Rooms through the API, renders returned Room state, and refetches Room snapshots after realtime Room updates.
+- Remaining follow-up work: persist lobby state through Postgres/TypeORM instead of the current in-process store, add full waiting-room controls for Seats/Table Stacks and targeted Seat Offers, and cover fairness-setting locks once first-Hand state exists.

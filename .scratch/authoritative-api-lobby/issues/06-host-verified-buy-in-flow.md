@@ -1,6 +1,6 @@
 # Host-Verified Buy-In Flow
 
-Status: needs-triage
+Status: ready-for-human
 
 ## Parent
 
@@ -12,14 +12,14 @@ Let a Player request a Buy-In for a Room, let the Room Host approve or reject it
 
 ## Acceptance criteria
 
-- [ ] A Player with Room access can request a Buy-In within the Room's allowed range.
-- [ ] Buy-In requests outside the allowed range are rejected with clear errors.
-- [ ] The Room Host can see pending Buy-In requests.
-- [ ] Only the Room Host can approve or reject a Buy-In.
-- [ ] Approving a Buy-In creates a Host-Verified Buy-In and Room-local Table Stack.
-- [ ] Rejecting a Buy-In prevents the Player from claiming a Seat or joining the Waitlist.
-- [ ] The UI avoids escrow, wallet, deposit, withdrawal, and bankroll language for this flow.
-- [ ] Tests cover request validation, Host-only approval and rejection, and prevention of seating eligibility before Host verification.
+- [x] A Player with Room access can request a Buy-In within the Room's allowed range.
+- [x] Buy-In requests outside the allowed range are rejected with clear errors.
+- [x] The Room Host can see pending Buy-In requests.
+- [x] Only the Room Host can approve or reject a Buy-In.
+- [x] Approving a Buy-In creates a Host-Verified Buy-In and Room-local Table Stack.
+- [x] Rejecting a Buy-In prevents the Player from claiming a Seat or joining the Waitlist.
+- [x] The UI avoids escrow, wallet, deposit, withdrawal, and bankroll language for this flow.
+- [x] Tests cover request validation, Host-only approval and rejection, and prevention of seating eligibility before Host verification.
 
 ## Blocked by
 

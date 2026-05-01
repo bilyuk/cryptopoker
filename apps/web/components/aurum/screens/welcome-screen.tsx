@@ -8,9 +8,11 @@ import { Panel } from "../panel";
 
 type WelcomeScreenProps = {
   onEnter: (name: string) => void;
+  busy?: boolean;
+  error?: string;
 };
 
-export function WelcomeScreen({ onEnter }: WelcomeScreenProps) {
+export function WelcomeScreen({ onEnter, busy = false, error }: WelcomeScreenProps) {
   const [name, setName] = useState("");
   const [mode, setMode] = useState<"guest" | "signin">("guest");
 
@@ -54,8 +56,9 @@ export function WelcomeScreen({ onEnter }: WelcomeScreenProps) {
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          <p className="mt-4 text-sm text-sapphire-400">Guest names are not saved. Close the tab, take the name with you.</p>
-          <AurumButton className="mt-6 w-full min-h-16" type="submit">
+          <p className="mt-4 text-sm text-sapphire-400">This browser keeps your Player identity for next time.</p>
+          {error && <p className="mt-4 text-sm font-semibold text-rose-200">{error}</p>}
+          <AurumButton className="mt-6 w-full min-h-16" type="submit" disabled={busy}>
             {mode === "guest" ? "Take a Seat" : "Continue"}
             <ArrowRight size={16} />
           </AurumButton>

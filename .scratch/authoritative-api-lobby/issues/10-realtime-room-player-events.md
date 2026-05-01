@@ -1,6 +1,6 @@
 # Realtime Room and Player Events
 
-Status: needs-triage
+Status: ready-for-human
 
 ## Parent
 
@@ -12,14 +12,14 @@ Add authenticated Socket.IO channels for Room-wide updates and private Player pr
 
 ## Acceptance criteria
 
-- [ ] Socket.IO connections authenticate with the same persistent guest session cookie as REST.
-- [ ] A Player can subscribe only to Room channels they are allowed to access.
-- [ ] Room-wide changes emit coarse-grained Room events.
-- [ ] Buy-In, Seat, Waitlist, Seat Offer, and Player changes emit the agreed coarse-grained events.
-- [ ] Targeted prompts, including Seat Offers, are sent only to the relevant Player channel.
-- [ ] The frontend reacts to events by updating or refetching Room state.
-- [ ] REST snapshots remain sufficient to recover after missed realtime events.
-- [ ] Tests cover socket authentication, Room subscription authorization, private Player targeting, and event emission after state-changing commands.
+- [x] Socket.IO connections authenticate with the same persistent guest session cookie as REST.
+- [x] A Player can subscribe only to Room channels they are allowed to access.
+- [x] Room-wide changes emit coarse-grained Room events.
+- [x] Buy-In, Seat, Waitlist, Seat Offer, and Player changes emit the agreed coarse-grained events.
+- [x] Targeted prompts, including Seat Offers, are sent only to the relevant Player channel.
+- [x] The frontend reacts to events by updating or refetching Room state.
+- [x] REST snapshots remain sufficient to recover after missed realtime events.
+- [x] Tests cover socket authentication, Room subscription authorization, private Player targeting, and event emission after state-changing commands.
 
 ## Blocked by
 

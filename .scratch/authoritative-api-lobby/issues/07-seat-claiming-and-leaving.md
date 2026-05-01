@@ -1,6 +1,6 @@
 # Seat Claiming and Leaving
 
-Status: needs-triage
+Status: ready-for-agent
 
 ## Parent
 
@@ -12,13 +12,13 @@ Let Players with Host-Verified Buy-Ins claim open Seats, leave Seats between Han
 
 ## Acceptance criteria
 
-- [ ] A Player with a Host-Verified Buy-In can claim an open Seat.
-- [ ] A Player without a Host-Verified Buy-In cannot claim a Seat.
-- [ ] A Player cannot occupy more than one Seat in the Room.
-- [ ] Seat capacity is enforced.
-- [ ] A seated Player can leave their Seat while no Live Hand rules are involved in this slice.
+- [x] A Player with a Host-Verified Buy-In can claim an open Seat.
+- [x] A Player without a Host-Verified Buy-In cannot claim a Seat.
+- [x] A Player cannot occupy more than one Seat in the Room.
+- [x] Seat capacity is enforced.
+- [x] A seated Player can leave their Seat while no Live Hand rules are involved in this slice.
 - [ ] The waiting-room UI renders server-backed Seats and Table Stack information.
-- [ ] Tests cover successful Seat claiming, unverified Player rejection, duplicate Seat prevention, capacity enforcement, and leaving a Seat.
+- [x] Tests cover successful Seat claiming, unverified Player rejection, duplicate Seat prevention, capacity enforcement, and leaving a Seat.
 
 ## Blocked by
 

@@ -2,6 +2,7 @@ export type AppScreen = "welcome" | "lobby" | "waiting" | "table" | "create" | "
 
 export type Room = {
   id: string;
+  inviteCode?: string;
   name: string;
   variant: string;
   blinds: string;

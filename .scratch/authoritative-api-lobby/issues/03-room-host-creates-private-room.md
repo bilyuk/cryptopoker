@@ -1,6 +1,6 @@
 # Room Host Creates Private Room
 
-Status: needs-triage
+Status: ready-for-human
 
 ## Parent
 
@@ -12,14 +12,14 @@ Let a Player create one active private Room, become the Room Host, configure the
 
 ## Acceptance criteria
 
-- [ ] An authenticated Player can create a private Room with name, blinds, buy-in range, Seat count, and action timer.
-- [ ] The creator becomes the Room Host.
-- [ ] A Room creates exactly one Table in version 1.
-- [ ] A Room receives an unguessable Invite Link distinct from the internal Room identifier.
-- [ ] A Player cannot create or join a second active Room while already participating in one.
-- [ ] Room creation validates settings and returns clear command errors.
-- [ ] The frontend create-room flow creates the Room through the API and renders the returned Room state.
-- [ ] Tests cover successful Room creation, Host assignment, Invite Link creation, and one-active-Room enforcement.
+- [x] An authenticated Player can create a private Room with name, blinds, buy-in range, Seat count, and action timer.
+- [x] The creator becomes the Room Host.
+- [x] A Room creates exactly one Table in version 1.
+- [x] A Room receives an unguessable Invite Link distinct from the internal Room identifier.
+- [x] A Player cannot create or join a second active Room while already participating in one.
+- [x] Room creation validates settings and returns clear command errors.
+- [x] The frontend create-room flow creates the Room through the API and renders the returned Room state.
+- [x] Tests cover successful Room creation, Host assignment, Invite Link creation, and one-active-Room enforcement.
 
 ## Blocked by
 

@@ -3,22 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import {
-  BUY_INS_PATH,
-  buyInApprovePath,
-  CURRENT_PLAYER_PATH,
-  CURRENT_PLAYER_SESSION_PATH,
-  CURRENT_ROOM_PATH,
-  inviteLinkJoinPath,
-  inviteLinkPath,
-  PLAYERS_PATH,
   REALTIME_EVENTS,
-  ROOMS_PATH,
-  SEATS_CLAIM_PATH,
-  SEATS_LEAVE_PATH,
-  seatOfferAcceptPath,
-  seatOfferDeclinePath,
-  WAITLIST_JOIN_PATH,
-  WAITLIST_LEAVE_PATH,
   type CurrentPlayerResponse,
   type RoomResponse,
   type RoomUpdatedPayload,
@@ -51,7 +36,7 @@ export function useRoomClient() {
 
     async function resumePlayer() {
       try {
-        const response = await apiFetch(CURRENT_PLAYER_PATH);
+        const response = await apiFetch("/players/current");
         if (!response.ok) return;
 
         const current = (await response.json()) as CurrentPlayerResponse;
@@ -59,7 +44,7 @@ export function useRoomClient() {
           setPlayerId(current.player.id);
           setPlayerName(current.player.displayName);
 
-          const roomResponse = await apiFetch(CURRENT_ROOM_PATH);
+          const roomResponse = await apiFetch("/rooms/current");
           if (roomResponse.ok) {
             const { room } = (await roomResponse.json()) as RoomResponse;
             const nextRoom = toUiRoomForPlayer(room, current.player.id);
@@ -108,7 +93,7 @@ export function useRoomClient() {
     setSessionError(undefined);
 
     try {
-      const response = await apiFetch(PLAYERS_PATH, {
+      const response = await apiFetch("/players", {
         method: "POST",
         body: JSON.stringify({ displayName: name || "riverrat" }),
       });
@@ -135,7 +120,7 @@ export function useRoomClient() {
   }
 
   async function createRoom(values: CreateRoomValues) {
-    const response = await apiFetch(ROOMS_PATH, {
+    const response = await apiFetch("/rooms", {
       method: "POST",
       body: JSON.stringify({
         name: values.name,
@@ -163,7 +148,7 @@ export function useRoomClient() {
       return;
     }
 
-    const response = await apiFetch(inviteLinkJoinPath(selectedRoom.inviteCode), { method: "POST" });
+    const response = await apiFetch(`/invite-links/${selectedRoom.inviteCode}/join`, { method: "POST" });
     if (!response.ok) {
       setInviteJoinError("You cannot join that Room from this browser right now.");
       return;
@@ -184,7 +169,7 @@ export function useRoomClient() {
       return;
     }
 
-    const response = await apiFetch(inviteLinkPath(inviteCode));
+    const response = await apiFetch(`/invite-links/${inviteCode}`);
     if (!response.ok) {
       setInviteJoinError("That Invite Link is invalid or expired.");
       return;
@@ -230,7 +215,7 @@ export function useRoomClient() {
 
   async function signOut() {
     try {
-      await apiFetch(CURRENT_PLAYER_SESSION_PATH, { method: "DELETE" });
+      await apiFetch("/players/current/session", { method: "DELETE" });
     } finally {
       setPlayerId(undefined);
       setScreen("welcome");
@@ -248,15 +233,15 @@ export function useRoomClient() {
   }
 
   const requestBuyIn = () =>
-    runRoomCommand(BUY_INS_PATH, { roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue });
-  const approveBuyIn = (buyInId: string) => runRoomCommand(buyInApprovePath(buyInId));
+    runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue });
+  const approveBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/approve`);
   const claimSeat = (seatNumber: number) =>
-    runRoomCommand(SEATS_CLAIM_PATH, { roomId: selectedRoom.id, seatNumber });
-  const leaveSeat = () => runRoomCommand(SEATS_LEAVE_PATH, { roomId: selectedRoom.id });
-  const joinWaitlist = () => runRoomCommand(WAITLIST_JOIN_PATH, { roomId: selectedRoom.id });
-  const leaveWaitlist = () => runRoomCommand(WAITLIST_LEAVE_PATH, { roomId: selectedRoom.id });
-  const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(seatOfferAcceptPath(seatOfferId));
-  const declineSeatOffer = (seatOfferId: string) => runRoomCommand(seatOfferDeclinePath(seatOfferId));
+    runRoomCommand("/seats/claim", { roomId: selectedRoom.id, seatNumber });
+  const leaveSeat = () => runRoomCommand("/seats/leave", { roomId: selectedRoom.id });
+  const joinWaitlist = () => runRoomCommand("/waitlist/join", { roomId: selectedRoom.id });
+  const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
+  const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
+  const declineSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/decline`);
 
   return {
     acceptSeatOffer,

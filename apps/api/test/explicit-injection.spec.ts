@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { PLAYERS_PATH, ROOMS_PATH, type RoomSettingsDto } from "@cryptopoker/contracts";
+import type { RoomSettingsDto } from "@cryptopoker/contracts";
 import { BuyInsController } from "../src/lobby/buy-ins.controller.js";
 import { InviteLinksController } from "../src/lobby/invite-links.controller.js";
 import { LobbyStore } from "../src/lobby/lobby.store.js";
@@ -32,11 +32,11 @@ describe("API dependency injection without emitted constructor metadata", () => 
 
     try {
       const server = app.getHttpServer();
-      const createdPlayer = await request(server).post(PLAYERS_PATH).send({ displayName: "host" }).expect(201);
+      const createdPlayer = await request(server).post("/players").send({ displayName: "host" }).expect(201);
       const cookie = readSetCookie(createdPlayer.headers["set-cookie"])[0];
 
       const createdRoom = await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", cookie)
         .send(defaultSettings)
         .expect(201);

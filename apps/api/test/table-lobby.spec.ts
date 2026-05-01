@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { PLAYERS_PATH, ROOMS_PATH, type RoomSettingsDto } from "@cryptopoker/contracts";
+import type { RoomSettingsDto } from "@cryptopoker/contracts";
 import { AppModule } from "../src/app.module.js";
 
 const headsUpSettings: RoomSettingsDto = {
@@ -28,7 +28,7 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
       const thirdGuestCookie = await createPlayer(server, "third");
 
       const created = await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", hostCookie)
         .send(headsUpSettings)
         .expect(201);
@@ -123,7 +123,7 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
       const thirdCookie = await createPlayer(server, "third");
       const fourthCookie = await createPlayer(server, "fourth");
 
-      const created = await request(server).post(ROOMS_PATH).set("Cookie", hostCookie).send(headsUpSettings).expect(201);
+      const created = await request(server).post("/rooms").set("Cookie", hostCookie).send(headsUpSettings).expect(201);
       const roomId = created.body.room.id;
       const inviteCode = created.body.room.inviteCode;
 
@@ -160,7 +160,7 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
 });
 
 async function createPlayer(server: Parameters<typeof request>[0], displayName: string): Promise<string> {
-  const response = await request(server).post(PLAYERS_PATH).send({ displayName }).expect(201);
+  const response = await request(server).post("/players").send({ displayName }).expect(201);
   return readSetCookie(response.headers["set-cookie"])[0];
 }
 

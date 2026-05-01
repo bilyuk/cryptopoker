@@ -1,13 +1,7 @@
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import {
-  CURRENT_PLAYER_DISPLAY_NAME_PATH,
-  CURRENT_PLAYER_PATH,
-  CURRENT_PLAYER_SESSION_PATH,
-  PLAYERS_PATH,
-  SESSION_COOKIE_NAME,
-} from "@cryptopoker/contracts";
+import { SESSION_COOKIE_NAME } from "@cryptopoker/contracts";
 import { AppModule } from "../src/app.module.js";
 
 describe("persistent Player session", () => {
@@ -22,7 +16,7 @@ describe("persistent Player session", () => {
       const server = app.getHttpServer();
 
       const created = await request(server)
-        .post(PLAYERS_PATH)
+        .post("/players")
         .send({ displayName: "riverrat" })
         .expect(201);
 
@@ -31,11 +25,11 @@ describe("persistent Player session", () => {
       const firstBrowserCookie = setCookie?.[0];
       expect(firstBrowserCookie).toBeDefined();
 
-      const resumed = await request(server).get(CURRENT_PLAYER_PATH).set("Cookie", firstBrowserCookie ?? "").expect(200);
+      const resumed = await request(server).get("/players/current").set("Cookie", firstBrowserCookie ?? "").expect(200);
       expect(resumed.body.player).toEqual(created.body.player);
 
       const duplicateName = await request(server)
-        .post(PLAYERS_PATH)
+        .post("/players")
         .send({ displayName: "riverrat" })
         .expect(201);
 
@@ -43,7 +37,7 @@ describe("persistent Player session", () => {
       expect(duplicateName.body.player.id).not.toBe(created.body.player.id);
 
       const renamed = await request(server)
-        .patch(CURRENT_PLAYER_DISPLAY_NAME_PATH)
+        .patch("/players/current/display-name")
         .set("Cookie", firstBrowserCookie ?? "")
         .send({ displayName: "river_rat" })
         .expect(200);
@@ -68,14 +62,14 @@ describe("persistent Player session", () => {
       const server = app.getHttpServer();
 
       const created = await request(server)
-        .post(PLAYERS_PATH)
+        .post("/players")
         .send({ displayName: "riverrat" })
         .expect(201);
       const sessionCookie = readSetCookie(created.headers["set-cookie"])?.[0];
       expect(sessionCookie).toBeDefined();
 
       const signedOut = await request(server)
-        .delete(CURRENT_PLAYER_SESSION_PATH)
+        .delete("/players/current/session")
         .set("Cookie", sessionCookie ?? "")
         .expect(204);
 
@@ -84,7 +78,7 @@ describe("persistent Player session", () => {
       expect(clearedCookie).toContain("Max-Age=0");
 
       await request(server)
-        .get(CURRENT_PLAYER_PATH)
+        .get("/players/current")
         .set("Cookie", sessionCookie ?? "")
         .expect(404)
         .expect(({ body }) => expect(body.code).toBe("PLAYER_SESSION_NOT_FOUND"));

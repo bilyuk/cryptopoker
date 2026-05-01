@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { PLAYERS_PATH, ROOMS_PATH, type RoomSettingsDto } from "@cryptopoker/contracts";
+import type { RoomSettingsDto } from "@cryptopoker/contracts";
 import { AppModule } from "../src/app.module.js";
 
 const defaultSettings: RoomSettingsDto = {
@@ -25,7 +25,7 @@ describe("Room Host private Room flow", () => {
       const hostCookie = await createPlayer(server, "host");
 
       const created = await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", hostCookie)
         .send(defaultSettings)
         .expect(201);
@@ -40,7 +40,7 @@ describe("Room Host private Room flow", () => {
       expect(created.body.room.seats).toHaveLength(6);
 
       await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", hostCookie)
         .send({ ...defaultSettings, name: "Second Room" })
         .expect(400)
@@ -63,7 +63,7 @@ describe("Invite Link access", () => {
       const guestCookie = await createPlayer(server, "guest");
 
       const created = await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", hostCookie)
         .send(defaultSettings)
         .expect(201);
@@ -79,7 +79,7 @@ describe("Invite Link access", () => {
       expect(joined.body.room.players.map((player: { displayName: string }) => player.displayName)).toContain("guest");
 
       await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", guestCookie)
         .send({ ...defaultSettings, name: "Other Room" })
         .expect(400);
@@ -107,7 +107,7 @@ describe("Room settings and Invite Link rotation", () => {
       const guestCookie = await createPlayer(server, "guest");
 
       const created = await request(server)
-        .post(ROOMS_PATH)
+        .post("/rooms")
         .set("Cookie", hostCookie)
         .send(defaultSettings)
         .expect(201);
@@ -144,7 +144,7 @@ describe("Room settings and Invite Link rotation", () => {
 });
 
 async function createPlayer(server: Parameters<typeof request>[0], displayName: string): Promise<string> {
-  const response = await request(server).post(PLAYERS_PATH).send({ displayName }).expect(201);
+  const response = await request(server).post("/players").send({ displayName }).expect(201);
   return readSetCookie(response.headers["set-cookie"])[0];
 }
 

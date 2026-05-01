@@ -2,7 +2,7 @@ import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { io, type Socket } from "socket.io-client";
 import { afterEach, describe, expect, it } from "vitest";
-import { PLAYERS_PATH, REALTIME_EVENTS, ROOMS_PATH, type RoomSettingsDto } from "@cryptopoker/contracts";
+import { REALTIME_EVENTS, type RoomSettingsDto } from "@cryptopoker/contracts";
 import { AppModule } from "../src/app.module.js";
 
 const settings: RoomSettingsDto = {
@@ -40,7 +40,7 @@ describe("realtime Room and Player events", () => {
       const thirdCookie = await createPlayer(server, "third");
       const outsiderCookie = await createPlayer(server, "outsider");
 
-      const created = await request(server).post(ROOMS_PATH).set("Cookie", hostCookie).send(settings).expect(201);
+      const created = await request(server).post("/rooms").set("Cookie", hostCookie).send(settings).expect(201);
       const roomId = created.body.room.id;
       const inviteCode = created.body.room.inviteCode;
 
@@ -79,7 +79,7 @@ describe("realtime Room and Player events", () => {
 });
 
 async function createPlayer(server: Parameters<typeof request>[0], displayName: string): Promise<string> {
-  const response = await request(server).post(PLAYERS_PATH).send({ displayName }).expect(201);
+  const response = await request(server).post("/players").send({ displayName }).expect(201);
   return readSetCookie(response.headers["set-cookie"])[0];
 }
 

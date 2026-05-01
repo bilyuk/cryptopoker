@@ -1,12 +1,8 @@
 import { Body, Controller, Delete, Get, Headers, HttpCode, Inject, Patch, Post, Res } from "@nestjs/common";
-import {
-  CURRENT_PLAYER_DISPLAY_NAME_PATH,
-  CURRENT_PLAYER_PATH,
-  CURRENT_PLAYER_SESSION_PATH,
-  PLAYERS_PATH,
-  type CreateGuestSessionRequest,
-  type CurrentPlayerResponse,
-  type UpdateDisplayNameRequest,
+import type {
+  CreateGuestSessionRequest,
+  CurrentPlayerResponse,
+  UpdateDisplayNameRequest,
 } from "@cryptopoker/contracts";
 import { clearSessionCookie, createSessionCookie, readSessionCookie } from "./session-cookie.js";
 import { currentPlayerFromCookie } from "./current-player.js";
@@ -20,7 +16,7 @@ type HeaderResponse = {
 export class PlayersController {
   constructor(@Inject(SessionStore) private readonly sessions: SessionStore) {}
 
-  @Post(PLAYERS_PATH)
+  @Post("/players")
   @HttpCode(201)
   createGuestSession(@Body() body: CreateGuestSessionRequest, @Res({ passthrough: true }) response: HeaderResponse): CurrentPlayerResponse {
     const session = this.sessions.createGuestSession(body.displayName);
@@ -28,17 +24,17 @@ export class PlayersController {
     return { player: session.player };
   }
 
-  @Get(CURRENT_PLAYER_PATH)
+  @Get("/players/current")
   currentPlayer(@Headers("cookie") cookieHeader: string | undefined): CurrentPlayerResponse {
     return { player: currentPlayerFromCookie(this.sessions, cookieHeader).require("Create a guest session before fetching the current Player.") };
   }
 
-  @Patch(CURRENT_PLAYER_DISPLAY_NAME_PATH)
+  @Patch("/players/current/display-name")
   updateDisplayName(@Headers("cookie") cookieHeader: string | undefined, @Body() body: UpdateDisplayNameRequest): CurrentPlayerResponse {
     return { player: currentPlayerFromCookie(this.sessions, cookieHeader).updateDisplayName(body.displayName) };
   }
 
-  @Delete(CURRENT_PLAYER_SESSION_PATH)
+  @Delete("/players/current/session")
   @HttpCode(204)
   deleteCurrentSession(@Headers("cookie") cookieHeader: string | undefined, @Res({ passthrough: true }) response: HeaderResponse): void {
     this.sessions.deleteSession(readSessionCookie(cookieHeader));

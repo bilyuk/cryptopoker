@@ -1,0 +1,68 @@
+import type { Room } from "./types";
+
+export const logoUrl = "https://www.figma.com/api/mcp/asset/3904d8cc-02af-4b95-8868-0b1ab0418b66";
+
+export const defaultRooms: Room[] = [
+  {
+    id: "gilt-room",
+    name: "Gilt Room",
+    variant: "No Limit Hold'em",
+    blinds: "$2/$5",
+    buyIn: "$100-$500",
+    seats: "4/6",
+    timer: "30s",
+    status: "Seats open",
+    featured: true,
+  },
+  {
+    id: "marble-hall",
+    name: "Marble Hall",
+    variant: "No Limit Hold'em",
+    blinds: "$0.50/$1",
+    buyIn: "$20-$100",
+    seats: "5/6",
+    timer: "30s",
+    status: "Seats open",
+  },
+  {
+    id: "chandelier",
+    name: "Chandelier",
+    variant: "No Limit Hold'em",
+    blinds: "$5/$10",
+    buyIn: "$400-$1000",
+    seats: "3/6",
+    timer: "30s",
+    status: "Seats open",
+  },
+  {
+    id: "sapphire-lounge",
+    name: "Sapphire Lounge",
+    variant: "No Limit Hold'em",
+    blinds: "$1/$3",
+    buyIn: "$60-$300",
+    seats: "2/6",
+    timer: "30s",
+    status: "Seats open",
+  },
+  {
+    id: "brass-cage",
+    name: "Brass Cage - HU",
+    variant: "No Limit Hold'em",
+    blinds: "$10/$25",
+    buyIn: "$1000-$2500",
+    seats: "1/2",
+    timer: "30s",
+    status: "Seats open",
+  },
+  {
+    id: "penny-parlor",
+    name: "Penny Parlor",
+    variant: "No Limit Hold'em",
+    blinds: "$0.10/$0.25",
+    buyIn: "$5-$25",
+    seats: "6/6",
+    timer: "30s",
+    status: "Full",
+    full: true,
+  },
+];

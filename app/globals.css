@@ -1,0 +1,139 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-sapphire-950: #070a16;
+  --color-sapphire-900: #0b1024;
+  --color-sapphire-850: #0e1433;
+  --color-sapphire-800: #11183a;
+  --color-sapphire-500: #33477e;
+  --color-sapphire-400: #6277b8;
+  --color-sapphire-200: #c6cfe8;
+  --color-ivory-50: #fdfbf4;
+  --color-ivory-100: #f6f1e3;
+  --color-champagne-300: #f0d9a4;
+  --color-champagne-500: #d4a85a;
+  --color-gold-400: #e4c37d;
+  --color-danger-400: #d4615a;
+  --color-verified-400: #6fc9a1;
+  --font-display: "Cormorant Garamond", serif;
+  --font-sans: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #070a16;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #070a16;
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+@layer components {
+  .aurum-backdrop {
+    background:
+      radial-gradient(900px 260px at 50% 28%, rgb(212 168 90 / 0.1), transparent 66%),
+      linear-gradient(180deg, #151827, #0a0d1d 42%, #070a16);
+  }
+
+  .gilt-panel {
+    @apply relative border border-champagne-500/35 bg-gradient-to-b from-sapphire-800/80 to-sapphire-900/95 shadow-[0_42px_110px_rgb(0_0_0_/_0.62),inset_0_1px_0_rgb(212_168_90_/_0.24)];
+  }
+
+  .gilt-line {
+    background: linear-gradient(90deg, transparent, rgb(212 168 90 / 0.62), transparent);
+  }
+
+  .aurum-input {
+    @apply min-h-14 w-full rounded-xl border border-champagne-500/35 bg-sapphire-950/70 px-5 text-ivory-100 outline-none transition placeholder:text-ivory-100/35 focus:border-champagne-500/70;
+  }
+
+  .aurum-eyebrow {
+    @apply text-[9px] font-semibold uppercase leading-none tracking-[0.28em] text-sapphire-400 md:text-[9.5px] xl:text-[10px];
+  }
+
+  .aurum-caption {
+    @apply text-[10px] leading-4 text-sapphire-200 md:text-xs xl:text-[13px];
+  }
+
+  .aurum-mono-value {
+    @apply font-mono text-xs font-medium leading-none text-gold-400 md:text-sm xl:text-base;
+  }
+
+  .aurum-action-title {
+    @apply text-[11px] font-semibold leading-tight tracking-[0.02em] md:text-[12px] xl:text-sm;
+  }
+
+  .aurum-action-detail {
+    @apply font-mono text-[9px] leading-tight md:text-[10px] xl:text-[11px];
+  }
+
+  .aurum-control-pill {
+    @apply h-6 rounded-full border border-champagne-500/35 bg-champagne-500/5 px-2.5 text-[9px] font-semibold leading-none tracking-[0.06em] text-champagne-500 md:text-[9.5px] xl:h-7 xl:px-3 xl:text-[10.5px];
+  }
+
+  .stage-arc {
+    @apply absolute left-1/2 rounded-full border border-champagne-500/10;
+    transform: translateX(-50%);
+  }
+
+  .brass-column {
+    @apply w-7 rounded-[2px] drop-shadow-[0_0_12px_rgb(212_168_90_/_0.35)];
+    background: linear-gradient(90deg, #2a1d0a, #6b4e1e 12%, #d4a85a 32%, #f0d9a4 48%, #d4a85a 56%, #8b6a2e 72%, #2a1d0a);
+  }
+
+  .chandelier-thread {
+    background: linear-gradient(#f0d9a4, #d4a85a 30%, #8b6a2e 80%, transparent);
+    filter: drop-shadow(0 0 2px rgb(240 217 164 / 0.6));
+  }
+
+  .seat-1 {
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+  }
+
+  .seat-2 {
+    right: 30px;
+    top: 170px;
+  }
+
+  .seat-3 {
+    right: 90px;
+    bottom: 60px;
+  }
+
+  .seat-4 {
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+  }
+
+  .seat-5 {
+    left: 90px;
+    bottom: 60px;
+  }
+
+  .seat-6 {
+    left: 30px;
+    top: 170px;
+  }
+}

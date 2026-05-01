@@ -2,8 +2,7 @@ import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { io, type Socket } from "socket.io-client";
 import { afterEach, describe, expect, it } from "vitest";
-import { PLAYERS_PATH, ROOMS_PATH, type RoomSettingsDto } from "@cryptopoker/contracts";
-import { ROOM_UPDATED_EVENT, SEAT_OFFER_CREATED_EVENT } from "../src/lobby/realtime.service.js";
+import { PLAYERS_PATH, REALTIME_EVENTS, ROOMS_PATH, type RoomSettingsDto } from "@cryptopoker/contracts";
 import { AppModule } from "../src/app.module.js";
 
 const settings: RoomSettingsDto = {
@@ -60,15 +59,15 @@ describe("realtime Room and Player events", () => {
         code: "ROOM_ACCESS_REQUIRED",
       });
 
-      const roomUpdated = once(hostSocket, ROOM_UPDATED_EVENT);
+      const roomUpdated = once(hostSocket, REALTIME_EVENTS.roomUpdated);
       await verifyAndSeat(server, hostCookie, firstCookie, roomId, 100, 1);
       await expect(roomUpdated).resolves.toEqual(expect.objectContaining({ roomId }));
 
       await verifyAndSeat(server, hostCookie, secondCookie, roomId, 120, 2);
       await verify(server, hostCookie, thirdCookie, roomId, 140);
       await request(server).post("/waitlist/join").set("Cookie", thirdCookie).send({ roomId }).expect(201);
-      const secondOfferPrompt = once(secondSocket, SEAT_OFFER_CREATED_EVENT, 200);
-      const thirdOfferPrompt = once(thirdSocket, SEAT_OFFER_CREATED_EVENT);
+      const secondOfferPrompt = once(secondSocket, REALTIME_EVENTS.seatOfferCreated, 200);
+      const thirdOfferPrompt = once(thirdSocket, REALTIME_EVENTS.seatOfferCreated);
       await request(server).post("/seats/leave").set("Cookie", firstCookie).send({ roomId }).expect(201);
 
       await expect(thirdOfferPrompt).resolves.toEqual(expect.objectContaining({ roomId }));

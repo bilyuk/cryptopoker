@@ -3,7 +3,14 @@ import { AurumButton } from "../button";
 import { Header } from "../header";
 import { Panel } from "../panel";
 import { SpecRow } from "../spec-row";
-import type { Room } from "../types";
+import type { Room, RoomPlayerBuyInStatus } from "../types";
+
+const BUY_IN_STATUS_LABELS: Record<RoomPlayerBuyInStatus, string> = {
+  none: "Needs Buy-In",
+  pending: "Buy-In pending",
+  "host-verified": "Buy-In verified",
+  rejected: "Buy-In rejected",
+};
 
 type RoomScreenProps = {
   playerId?: string;
@@ -49,22 +56,15 @@ export function RoomScreen({
   const isHost = playerId === room.hostPlayerId;
   const currentPlayer = room.players.find((player) => player.playerId === playerId);
   const firstOpenSeat = room.openSeatNumbers[0];
-  const canClaimSeat = Boolean(
+  const isReadyToTakeSeat = Boolean(
     currentPlayer &&
       currentPlayer.buyInStatus === "host-verified" &&
       !currentPlayer.seated &&
-      firstOpenSeat &&
       !room.currentPlayerWaitlistPosition &&
       !room.currentPlayerSeatOffer,
   );
-  const canJoinWaitlist = Boolean(
-    currentPlayer &&
-      currentPlayer.buyInStatus === "host-verified" &&
-      !currentPlayer.seated &&
-      room.full &&
-      !room.currentPlayerWaitlistPosition &&
-      !room.currentPlayerSeatOffer,
-  );
+  const canClaimSeat = isReadyToTakeSeat && Boolean(firstOpenSeat);
+  const canJoinWaitlist = isReadyToTakeSeat && Boolean(room.full);
   const canRequestBuyIn = Boolean(currentPlayer && currentPlayer.buyInStatus !== "pending" && currentPlayer.buyInStatus !== "host-verified");
   const canDeal = isHost && room.occupiedSeats >= 2;
 
@@ -229,9 +229,6 @@ export function RoomScreen({
   );
 }
 
-function formatBuyInStatus(status: "none" | "pending" | "host-verified" | "rejected"): string {
-  if (status === "host-verified") return "Buy-In verified";
-  if (status === "pending") return "Buy-In pending";
-  if (status === "rejected") return "Buy-In rejected";
-  return "Needs Buy-In";
+function formatBuyInStatus(status: RoomPlayerBuyInStatus): string {
+  return BUY_IN_STATUS_LABELS[status];
 }

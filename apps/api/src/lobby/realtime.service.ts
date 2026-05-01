@@ -3,14 +3,6 @@ import type { Server } from "socket.io";
 import { REALTIME_EVENTS } from "@cryptopoker/contracts";
 import type { LobbyCommandEvent } from "./command-events.js";
 
-export const ROOM_UPDATED_EVENT = REALTIME_EVENTS.roomUpdated;
-export const BUY_IN_UPDATED_EVENT = REALTIME_EVENTS.buyInUpdated;
-export const SEAT_UPDATED_EVENT = REALTIME_EVENTS.seatUpdated;
-export const WAITLIST_UPDATED_EVENT = REALTIME_EVENTS.waitlistUpdated;
-export const SEAT_OFFER_CREATED_EVENT = REALTIME_EVENTS.seatOfferCreated;
-export const SEAT_OFFER_UPDATED_EVENT = REALTIME_EVENTS.seatOfferUpdated;
-export const PLAYER_UPDATED_EVENT = REALTIME_EVENTS.playerUpdated;
-
 @Injectable()
 export class RealtimeService {
   private server: Server | undefined;
@@ -22,60 +14,36 @@ export class RealtimeService {
   emit(event: LobbyCommandEvent): void {
     switch (event.type) {
       case "player.updated":
-        this.emitPlayerUpdated(event.playerId);
+        this.server?.to(playerChannel(event.playerId)).emit(REALTIME_EVENTS.playerUpdated, { playerId: event.playerId });
         return;
       case "room.updated":
-        this.emitRoomUpdated(event.roomId);
+        this.server?.to(roomChannel(event.roomId)).emit(REALTIME_EVENTS.roomUpdated, { roomId: event.roomId });
         return;
       case "buyIn.updated":
-        this.emitBuyInUpdated(event.roomId, event.buyInId);
+        this.server?.to(roomChannel(event.roomId)).emit(REALTIME_EVENTS.buyInUpdated, { roomId: event.roomId, buyInId: event.buyInId });
+        this.emitRoomUpdated(event.roomId);
         return;
       case "seat.updated":
-        this.emitSeatUpdated(event.roomId);
+        this.server?.to(roomChannel(event.roomId)).emit(REALTIME_EVENTS.seatUpdated, { roomId: event.roomId });
+        this.emitRoomUpdated(event.roomId);
         return;
       case "waitlist.updated":
-        this.emitWaitlistUpdated(event.roomId);
+        this.server?.to(roomChannel(event.roomId)).emit(REALTIME_EVENTS.waitlistUpdated, { roomId: event.roomId });
+        this.emitRoomUpdated(event.roomId);
         return;
       case "seatOffer.created":
-        this.emitSeatOfferCreated(event.roomId, event.playerId, event.seatOfferId);
+        this.server?.to(playerChannel(event.playerId)).emit(REALTIME_EVENTS.seatOfferCreated, { roomId: event.roomId, playerId: event.playerId, seatOfferId: event.seatOfferId });
+        this.emitRoomUpdated(event.roomId);
         return;
       case "seatOffer.updated":
-        this.emitSeatOfferUpdated(event.roomId, event.playerId, event.seatOfferId);
+        this.server?.to(playerChannel(event.playerId)).emit(REALTIME_EVENTS.seatOfferUpdated, { roomId: event.roomId, playerId: event.playerId, seatOfferId: event.seatOfferId });
+        this.emitRoomUpdated(event.roomId);
         return;
     }
   }
 
-  emitRoomUpdated(roomId: string): void {
-    this.server?.to(roomChannel(roomId)).emit(ROOM_UPDATED_EVENT, { roomId });
-  }
-
-  emitBuyInUpdated(roomId: string, buyInId: string): void {
-    this.server?.to(roomChannel(roomId)).emit(BUY_IN_UPDATED_EVENT, { roomId, buyInId });
-    this.emitRoomUpdated(roomId);
-  }
-
-  emitSeatUpdated(roomId: string): void {
-    this.server?.to(roomChannel(roomId)).emit(SEAT_UPDATED_EVENT, { roomId });
-    this.emitRoomUpdated(roomId);
-  }
-
-  emitWaitlistUpdated(roomId: string): void {
-    this.server?.to(roomChannel(roomId)).emit(WAITLIST_UPDATED_EVENT, { roomId });
-    this.emitRoomUpdated(roomId);
-  }
-
-  emitSeatOfferCreated(roomId: string, playerId: string, seatOfferId: string): void {
-    this.server?.to(playerChannel(playerId)).emit(SEAT_OFFER_CREATED_EVENT, { roomId, playerId, seatOfferId });
-    this.emitRoomUpdated(roomId);
-  }
-
-  emitSeatOfferUpdated(roomId: string, playerId: string, seatOfferId: string): void {
-    this.server?.to(playerChannel(playerId)).emit(SEAT_OFFER_UPDATED_EVENT, { roomId, playerId, seatOfferId });
-    this.emitRoomUpdated(roomId);
-  }
-
-  emitPlayerUpdated(playerId: string): void {
-    this.server?.to(playerChannel(playerId)).emit(PLAYER_UPDATED_EVENT, { playerId });
+  private emitRoomUpdated(roomId: string): void {
+    this.server?.to(roomChannel(roomId)).emit(REALTIME_EVENTS.roomUpdated, { roomId });
   }
 }
 

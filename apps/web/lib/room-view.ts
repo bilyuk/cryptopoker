@@ -1,9 +1,6 @@
 import type { PlayerDto, RoomDto } from "@cryptopoker/contracts";
 import type { Room, RoomBuyInSummary, RoomPlayerSummary, RoomSeatLabel } from "@/components/aurum/types";
-
-export function toUiRoom(room: RoomDto): Room {
-  return toUiRoomForPlayer(room);
-}
+import { formatMoney } from "./format";
 
 export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id"]): Room {
   const occupiedSeats = room.seats.filter((seat) => seat.playerId).length;
@@ -29,7 +26,7 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
       const player = seat.playerId ? room.players.find((candidate) => candidate.playerId === seat.playerId) : undefined;
       return {
         label: player ? formatSeatPlayer(player, room.hostPlayerId) : `Seat ${seat.seatNumber} - waiting...`,
-        stack: seat.tableStack === null ? null : `$${seat.tableStack.toFixed(2)}`,
+        stack: seat.tableStack === null ? null : formatMoney(seat.tableStack),
       };
     }),
     players: room.players.map((player): RoomPlayerSummary => {
@@ -40,7 +37,7 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
         displayName: player.displayName,
         role: player.role,
         seated: Boolean(seat),
-        stack: seat?.tableStack === null || seat?.tableStack === undefined ? null : `$${seat.tableStack.toFixed(2)}`,
+        stack: seat?.tableStack === null || seat?.tableStack === undefined ? null : formatMoney(seat.tableStack),
         buyInStatus: buyIn?.status ?? "none",
         buyInId: buyIn?.id,
       };
@@ -53,7 +50,7 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
           id: buyIn.id,
           playerId: buyIn.playerId,
           displayName: player?.displayName ?? "Player",
-          amount: `$${buyIn.amount.toFixed(2)}`,
+          amount: formatMoney(buyIn.amount),
         };
       }),
     openSeatNumbers: room.seats.filter((seat) => !seat.playerId).map((seat) => seat.seatNumber),

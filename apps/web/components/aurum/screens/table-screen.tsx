@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { formatMoney } from "@/lib/format";
 import { Header } from "../header";
 import { parseCard, PlayingCard } from "../playing-card";
 import type { Room } from "../types";
@@ -26,10 +27,6 @@ const quickBets = [
 
 function clampChip(value: number, max: number) {
   return Math.max(0, Math.min(max, Math.round(value)));
-}
-
-function currency(value: number) {
-  return `$${value.toFixed(2)}`;
 }
 
 function ChipStack({ color, count }: { color: "red" | "gold" | "blue"; count: number }) {
@@ -158,7 +155,7 @@ export function TableScreen({ playerName, room, onLeave, onSignOut }: TableScree
     const committed = clampChip(amount, stack);
     setStack((current) => clampChip(current - committed, current));
     setPot((current) => current + committed);
-    appendLog(`00:${(21 - secondsLeft).toString().padStart(2, "0")}  ${playerName} ${label} ${currency(committed)}`);
+    appendLog(`00:${(21 - secondsLeft).toString().padStart(2, "0")}  ${playerName} ${label} ${formatMoney(committed)}`);
     advanceStreet();
     setRaiseTo((current) => clampChip(Math.max(current, pot * 0.5), maxRaise));
   }
@@ -186,7 +183,7 @@ export function TableScreen({ playerName, room, onLeave, onSignOut }: TableScree
 
   const timerLabel = `00:${secondsLeft.toString().padStart(2, "0")}`;
   const actionLabel = folded || street === "Showdown" ? "New Hand" : "Call";
-  const actionDetail = folded || street === "Showdown" ? "Start next deal" : currency(callAmount);
+  const actionDetail = folded || street === "Showdown" ? "Start next deal" : formatMoney(callAmount);
 
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden px-3 md:px-6 xl:px-10">
@@ -241,7 +238,7 @@ export function TableScreen({ playerName, room, onLeave, onSignOut }: TableScree
               <div className="absolute left-1/2 top-[50.5%] -translate-x-1/2 text-center md:top-[49%]">
                 <p className="text-[4.37px] font-semibold uppercase tracking-[0.32em] text-champagne-300/70 md:text-[9.5px] md:tracking-[0.32em] xl:text-[11.5px] 2xl:text-[12.5px]">Pot - {street}</p>
                 <strong className="mt-1 block font-mono text-[14.72px] font-medium leading-none text-champagne-300 md:mt-2 md:text-[32px] xl:text-[42px] 2xl:text-[48px]">
-                  {currency(pot)}
+                  {formatMoney(pot)}
                 </strong>
                 <p className="mt-1.5 font-mono text-[4.6px] uppercase tracking-[0.1em] text-champagne-300/55 md:mt-3 md:text-[10px] xl:text-[12px]">{room.blinds} - No Limit</p>
               </div>
@@ -307,7 +304,7 @@ export function TableScreen({ playerName, room, onLeave, onSignOut }: TableScree
               {actionLabel}
             </TableButton>
             <TableButton detail="Commit to the pot" disabled={folded} onClick={() => commitAction("raises to", Math.min(raiseTo, maxRaise))} tone="gold">
-              Raise to <span className="font-mono">{currency(Math.min(raiseTo, maxRaise))}</span>
+              Raise to <span className="font-mono">{formatMoney(Math.min(raiseTo, maxRaise))}</span>
             </TableButton>
           </div>
         </div>
@@ -342,7 +339,7 @@ export function TableScreen({ playerName, room, onLeave, onSignOut }: TableScree
             </TableButton>
           </div>
           <TableButton className="h-12 w-full items-center px-3 text-center" detail="Commit to the pot" disabled={folded} onClick={() => commitAction("raises to", Math.min(raiseTo, maxRaise))} tone="gold">
-            Raise to <span className="font-mono">{currency(Math.min(raiseTo, maxRaise))}</span>
+            Raise to <span className="font-mono">{formatMoney(Math.min(raiseTo, maxRaise))}</span>
           </TableButton>
         </div>
       </div>

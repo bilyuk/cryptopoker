@@ -22,7 +22,7 @@ export class TableSeating {
 
     seat.playerId = player.id;
     seat.tableStack = verifiedStack(room, player.id);
-    room.waitlist = room.waitlist.filter((entry) => entry.playerId !== player.id);
+    removeFromWaitlist(room, player.id);
     return commandResult(toRoomDto(room), [{ type: "seat.updated", roomId: room.id }]);
   }
 
@@ -51,8 +51,7 @@ export class TableSeating {
   }
 
   leaveWaitlist(player: PlayerDto, room: RoomRecord): CommandResult<RoomDto> {
-    room.waitlist = room.waitlist.filter((entry) => entry.playerId !== player.id);
-    resequenceWaitlist(room.waitlist);
+    removeFromWaitlist(room, player.id);
     return commandResult(toRoomDto(room), [{ type: "waitlist.updated", roomId: room.id }]);
   }
 
@@ -67,8 +66,7 @@ export class TableSeating {
     offer.status = "accepted";
     seat.playerId = player.id;
     seat.tableStack = verifiedStack(room, player.id);
-    room.waitlist = room.waitlist.filter((entry) => entry.playerId !== player.id);
-    resequenceWaitlist(room.waitlist);
+    removeFromWaitlist(room, player.id);
     return commandResult(toRoomDto(room), [
       { type: "seatOffer.updated", roomId: room.id, playerId: player.id, seatOfferId: offer.id },
       { type: "seat.updated", roomId: room.id },

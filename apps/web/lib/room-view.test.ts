@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RoomDto } from "@cryptopoker/contracts";
-import { toUiRoom, toUiRoomForPlayer } from "./room-view";
+import { toUiRoomForPlayer } from "./room-view";
 
 const emptyRoom: RoomDto = {
   id: "room-1",
@@ -30,7 +30,7 @@ const emptyRoom: RoomDto = {
 
 describe("Room view model", () => {
   it("renders server-backed empty Seat state without placeholder players", () => {
-    const room = toUiRoom(emptyRoom);
+    const room = toUiRoomForPlayer(emptyRoom);
 
     expect(room.seats).toBe("0/6");
     expect(room.occupiedSeats).toBe(0);
@@ -46,7 +46,7 @@ describe("Room view model", () => {
   });
 
   it("keeps joined unseated Players visible separately from occupied Seats", () => {
-    const room = toUiRoom({
+    const room = toUiRoomForPlayer({
       ...emptyRoom,
       players: [
         { playerId: "host-1", displayName: "codex_tester", role: "host" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import {
   CURRENT_PLAYER_PATH,
@@ -52,7 +52,7 @@ export function useRoomClient() {
           if (roomResponse.ok) {
             const { room } = (await roomResponse.json()) as RoomResponse;
             const nextRoom = toUiRoomForPlayer(room, current.player.id);
-            setRooms((currentRooms) => [nextRoom, ...currentRooms.filter((item) => item.id !== nextRoom.id).map((room) => ({ ...room, featured: false }))]);
+            setRooms((currentRooms) => placeFeaturedRoom(currentRooms, nextRoom));
             setSelectedRoomId(nextRoom.id);
             setScreen("waiting");
           } else {
@@ -71,22 +71,24 @@ export function useRoomClient() {
     };
   }, []);
 
+  const refetchRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const selectedServerRoomId = selectedRoom.inviteCode ? selectedRoom.id : undefined;
+
   useEffect(() => {
-    const selectedServerRoom = rooms.find((room) => room.id === selectedRoomId && room.inviteCode);
-    if (!selectedServerRoom) return;
+    if (!selectedServerRoomId) return;
 
     const socket = io(API_BASE_URL, { withCredentials: true, transports: ["websocket"] });
     socket.on("connect", () => {
-      socket.emit("room.subscribe", { roomId: selectedServerRoom.id });
+      socket.emit("room.subscribe", { roomId: selectedServerRoomId });
     });
-    socket.on(REALTIME_EVENTS.roomUpdated, async () => {
-      await refetchCurrentRoom();
+    socket.on(REALTIME_EVENTS.roomUpdated, () => {
+      void refetchRef.current();
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [rooms, selectedRoomId]);
+  }, [selectedServerRoomId]);
 
   async function enterLobby(name: string) {
     setSessionBusy(true);
@@ -137,7 +139,7 @@ export function useRoomClient() {
     const { room } = (await response.json()) as RoomResponse;
     const nextRoom = toUiRoomForPlayer(room, playerId);
 
-    setRooms((current) => [nextRoom, ...current.map((room) => ({ ...room, featured: false }))]);
+    setRooms((current) => placeFeaturedRoom(current, nextRoom));
     setSelectedRoomId(nextRoom.id);
     setScreen("waiting");
   }
@@ -177,7 +179,7 @@ export function useRoomClient() {
 
     const { room } = (await response.json()) as RoomResponse;
     const nextRoom = toUiRoomForPlayer(room, playerId);
-    setRooms((current) => [nextRoom, ...current.filter((item) => item.id !== nextRoom.id).map((room) => ({ ...room, featured: false }))]);
+    setRooms((current) => placeFeaturedRoom(current, nextRoom));
     setSelectedRoomId(nextRoom.id);
     setInviteJoinError(undefined);
     setScreen("invite");
@@ -224,76 +226,26 @@ export function useRoomClient() {
     }
   }
 
-  async function requestBuyIn() {
-    const response = await apiFetch("/buy-ins", {
+  async function runRoomCommand(path: string, body?: unknown) {
+    const response = await apiFetch(path, {
       method: "POST",
-      body: JSON.stringify({ roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue }),
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
     if (response.ok) {
       await refetchCurrentRoom();
     }
   }
 
-  async function approveBuyIn(buyInId: string) {
-    const response = await apiFetch(`/buy-ins/${buyInId}/approve`, { method: "POST" });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
-
-  async function claimSeat(seatNumber: number) {
-    const response = await apiFetch("/seats/claim", {
-      method: "POST",
-      body: JSON.stringify({ roomId: selectedRoom.id, seatNumber }),
-    });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
-
-  async function leaveSeat() {
-    const response = await apiFetch("/seats/leave", {
-      method: "POST",
-      body: JSON.stringify({ roomId: selectedRoom.id }),
-    });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
-
-  async function joinWaitlist() {
-    const response = await apiFetch("/waitlist/join", {
-      method: "POST",
-      body: JSON.stringify({ roomId: selectedRoom.id }),
-    });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
-
-  async function leaveWaitlist() {
-    const response = await apiFetch("/waitlist/leave", {
-      method: "POST",
-      body: JSON.stringify({ roomId: selectedRoom.id }),
-    });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
-
-  async function acceptSeatOffer(seatOfferId: string) {
-    const response = await apiFetch(`/seat-offers/${seatOfferId}/accept`, { method: "POST" });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
-
-  async function declineSeatOffer(seatOfferId: string) {
-    const response = await apiFetch(`/seat-offers/${seatOfferId}/decline`, { method: "POST" });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
-  }
+  const requestBuyIn = () =>
+    runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue });
+  const approveBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/approve`);
+  const claimSeat = (seatNumber: number) =>
+    runRoomCommand("/seats/claim", { roomId: selectedRoom.id, seatNumber });
+  const leaveSeat = () => runRoomCommand("/seats/leave", { roomId: selectedRoom.id });
+  const joinWaitlist = () => runRoomCommand("/waitlist/join", { roomId: selectedRoom.id });
+  const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
+  const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
+  const declineSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/decline`);
 
   async function refetchCurrentRoom() {
     const response = await apiFetch(CURRENT_ROOM_PATH);
@@ -303,6 +255,8 @@ export function useRoomClient() {
     const nextRoom = toUiRoomForPlayer(room, playerId);
     setRooms((current) => current.map((item) => (item.id === nextRoom.id ? nextRoom : item)));
   }
+
+  refetchRef.current = refetchCurrentRoom;
 
   return {
     acceptSeatOffer,
@@ -332,6 +286,10 @@ export function useRoomClient() {
     inviteJoinError,
     inviteActionMessage,
   };
+}
+
+function placeFeaturedRoom(current: Room[], next: Room): Room[] {
+  return [next, ...current.filter((item) => item.id !== next.id).map((room) => ({ ...room, featured: false }))];
 }
 
 function parseMoney(value: string): number {

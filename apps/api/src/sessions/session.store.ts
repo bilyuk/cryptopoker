@@ -43,10 +43,6 @@ export class SessionStore {
     return updated;
   }
 
-  findPlayerById(playerId: string): PlayerDto | undefined {
-    return this.players.get(playerId);
-  }
-
   deleteSession(sessionId: string | undefined): void {
     if (!sessionId) return;
     this.sessions.delete(sessionId);

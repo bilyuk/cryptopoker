@@ -1,4 +1,8 @@
+import type { BuyInDto } from "@cryptopoker/contracts";
+
 export type AppScreen = "welcome" | "lobby" | "waiting" | "table" | "create" | "invite" | "join";
+
+export type RoomPlayerBuyInStatus = BuyInDto["status"] | "none";
 
 export type Room = {
   id: string;
@@ -37,7 +41,7 @@ export type RoomPlayerSummary = {
   role: "host" | "player";
   seated: boolean;
   stack: string | null;
-  buyInStatus: "none" | "pending" | "host-verified" | "rejected";
+  buyInStatus: RoomPlayerBuyInStatus;
   buyInId?: string;
 };
 

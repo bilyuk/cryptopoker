@@ -41,10 +41,14 @@ export default function Home() {
           room={roomClient.selectedRoom}
           onBackToLobby={() => roomClient.setScreen("lobby")}
           onDeal={() => roomClient.setScreen("table")}
+          onApproveBuyIn={roomClient.approveBuyIn}
+          onClaimSeat={roomClient.claimSeat}
           onInvitePreview={() => roomClient.setScreen("invite")}
           onCopyInvite={roomClient.copyInvite}
+          onRequestBuyIn={roomClient.requestBuyIn}
           onShareInvite={roomClient.shareInvite}
           inviteActionMessage={roomClient.inviteActionMessage}
+          playerId={roomClient.playerId}
           onSignOut={roomClient.signOut}
         />
       )}
@@ -75,7 +79,7 @@ export default function Home() {
       )}
       {roomClient.screen === "invite" && (
         <InviteScreen
-          hostName={roomClient.playerName}
+          hostName={roomClient.selectedRoom.hostName}
           room={roomClient.selectedRoom}
           onJoin={roomClient.joinInvite}
           onSignIn={roomClient.signOut}

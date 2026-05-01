@@ -21,6 +21,7 @@ import { toUiRoom } from "@/lib/room-view";
 
 export function useRoomClient() {
   const [screen, setScreen] = useState<AppScreen>("welcome");
+  const [playerId, setPlayerId] = useState<string>();
   const [playerName, setPlayerName] = useState("riverrat");
   const [sessionBusy, setSessionBusy] = useState(false);
   const [sessionError, setSessionError] = useState<string>();
@@ -44,8 +45,19 @@ export function useRoomClient() {
 
         const current = (await response.json()) as CurrentPlayerResponse;
         if (!cancelled) {
+          setPlayerId(current.player.id);
           setPlayerName(current.player.displayName);
-          setScreen("lobby");
+
+          const roomResponse = await apiFetch(CURRENT_ROOM_PATH);
+          if (roomResponse.ok) {
+            const { room } = (await roomResponse.json()) as RoomResponse;
+            const nextRoom = toUiRoom(room);
+            setRooms((currentRooms) => [nextRoom, ...currentRooms.filter((item) => item.id !== nextRoom.id).map((room) => ({ ...room, featured: false }))]);
+            setSelectedRoomId(nextRoom.id);
+            setScreen("waiting");
+          } else {
+            setScreen("lobby");
+          }
         }
       } catch {
         // The API may be unavailable while the frontend prototype is run alone.
@@ -91,6 +103,7 @@ export function useRoomClient() {
       }
 
       const current = (await response.json()) as CurrentPlayerResponse;
+      setPlayerId(current.player.id);
       setPlayerName(current.player.displayName);
       setScreen("lobby");
     } catch {
@@ -204,9 +217,37 @@ export function useRoomClient() {
     try {
       await apiFetch(CURRENT_PLAYER_SESSION_PATH, { method: "DELETE" });
     } finally {
+      setPlayerId(undefined);
       setScreen("welcome");
       setInviteJoinError(undefined);
       setInviteActionMessage(undefined);
+    }
+  }
+
+  async function requestBuyIn() {
+    const response = await apiFetch("/buy-ins", {
+      method: "POST",
+      body: JSON.stringify({ roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue }),
+    });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
+  async function approveBuyIn(buyInId: string) {
+    const response = await apiFetch(`/buy-ins/${buyInId}/approve`, { method: "POST" });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
+  async function claimSeat(seatNumber: number) {
+    const response = await apiFetch("/seats/claim", {
+      method: "POST",
+      body: JSON.stringify({ roomId: selectedRoom.id, seatNumber }),
+    });
+    if (response.ok) {
+      await refetchCurrentRoom();
     }
   }
 
@@ -220,14 +261,18 @@ export function useRoomClient() {
   }
 
   return {
+    approveBuyIn,
+    claimSeat,
     createRoom,
     copyInvite,
     enterLobby,
     joinInvite,
     openRoom,
+    playerId,
     playerName,
     previewInviteLink,
     rooms,
+    requestBuyIn,
     screen,
     selectedRoom,
     sessionBusy,

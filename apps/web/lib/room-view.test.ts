@@ -44,4 +44,53 @@ describe("Room view model", () => {
       { label: "Seat 6 - waiting...", stack: null },
     ]);
   });
+
+  it("keeps joined unseated Players visible separately from occupied Seats", () => {
+    const room = toUiRoom({
+      ...emptyRoom,
+      players: [
+        { playerId: "host-1", displayName: "codex_tester", role: "host" },
+        { playerId: "guest-1", displayName: "guest_tester", role: "player" },
+      ],
+      buyIns: [
+        {
+          id: "buy-in-1",
+          roomId: "room-1",
+          playerId: "guest-1",
+          amount: 40,
+          status: "pending",
+        },
+      ],
+    });
+
+    expect(room.seats).toBe("0/6");
+    expect(room.players).toEqual([
+      {
+        playerId: "host-1",
+        displayName: "codex_tester",
+        role: "host",
+        seated: false,
+        stack: null,
+        buyInStatus: "none",
+        buyInId: undefined,
+      },
+      {
+        playerId: "guest-1",
+        displayName: "guest_tester",
+        role: "player",
+        seated: false,
+        stack: null,
+        buyInStatus: "pending",
+        buyInId: "buy-in-1",
+      },
+    ]);
+    expect(room.pendingBuyIns).toEqual([
+      {
+        id: "buy-in-1",
+        playerId: "guest-1",
+        displayName: "guest_tester",
+        amount: "$40.00",
+      },
+    ]);
+  });
 });

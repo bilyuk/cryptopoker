@@ -2,8 +2,18 @@ import type { Room } from "./types";
 
 export const logoUrl = "https://www.figma.com/api/mcp/asset/3904d8cc-02af-4b95-8868-0b1ab0418b66";
 
+const prototypeRoomDefaults = {
+  hostPlayerId: "prototype-host",
+  hostName: "riverrat",
+  buyInMinValue: 40,
+  players: [],
+  pendingBuyIns: [],
+  openSeatNumbers: [],
+};
+
 export const defaultRooms: Room[] = [
   {
+    ...prototypeRoomDefaults,
     id: "gilt-room",
     name: "Gilt Room",
     variant: "No Limit Hold'em",
@@ -25,6 +35,7 @@ export const defaultRooms: Room[] = [
     featured: true,
   },
   {
+    ...prototypeRoomDefaults,
     id: "marble-hall",
     name: "Marble Hall",
     variant: "No Limit Hold'em",
@@ -45,6 +56,7 @@ export const defaultRooms: Room[] = [
     status: "Seats open",
   },
   {
+    ...prototypeRoomDefaults,
     id: "chandelier",
     name: "Chandelier",
     variant: "No Limit Hold'em",
@@ -65,6 +77,7 @@ export const defaultRooms: Room[] = [
     status: "Seats open",
   },
   {
+    ...prototypeRoomDefaults,
     id: "sapphire-lounge",
     name: "Sapphire Lounge",
     variant: "No Limit Hold'em",
@@ -85,6 +98,7 @@ export const defaultRooms: Room[] = [
     status: "Seats open",
   },
   {
+    ...prototypeRoomDefaults,
     id: "brass-cage",
     name: "Brass Cage - HU",
     variant: "No Limit Hold'em",
@@ -101,6 +115,7 @@ export const defaultRooms: Room[] = [
     status: "Seats open",
   },
   {
+    ...prototypeRoomDefaults,
     id: "penny-parlor",
     name: "Penny Parlor",
     variant: "No Limit Hold'em",

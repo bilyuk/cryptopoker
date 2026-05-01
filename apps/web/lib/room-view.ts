@@ -2,8 +2,16 @@ import type { PlayerDto, RoomDto } from "@cryptopoker/contracts";
 import type { Room, RoomBuyInSummary, RoomPlayerSummary, RoomSeatLabel } from "@/components/aurum/types";
 
 export function toUiRoom(room: RoomDto): Room {
+  return toUiRoomForPlayer(room);
+}
+
+export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id"]): Room {
   const occupiedSeats = room.seats.filter((seat) => seat.playerId).length;
   const host = room.players.find((player) => player.playerId === room.hostPlayerId);
+  const waitlistEntry = currentPlayerId ? room.waitlist.find((entry) => entry.playerId === currentPlayerId) : undefined;
+  const pendingSeatOffer = currentPlayerId
+    ? room.seatOffers.find((offer) => offer.playerId === currentPlayerId && offer.status === "pending")
+    : undefined;
   return {
     id: room.id,
     inviteCode: room.inviteCode,
@@ -49,6 +57,13 @@ export function toUiRoom(room: RoomDto): Room {
         };
       }),
     openSeatNumbers: room.seats.filter((seat) => !seat.playerId).map((seat) => seat.seatNumber),
+    currentPlayerWaitlistPosition: waitlistEntry?.position,
+    currentPlayerSeatOffer: pendingSeatOffer
+      ? {
+          id: pendingSeatOffer.id,
+          seatNumber: pendingSeatOffer.seatNumber,
+        }
+      : undefined,
     timer: `${room.settings.actionTimerSeconds}s`,
     featured: true,
     private: true,

@@ -11,6 +11,10 @@ export class TableSeating {
     if (room.seats.some((seat) => seat.playerId === player.id)) {
       throw new BadRequestException({ code: "PLAYER_ALREADY_SEATED", message: "A Player cannot occupy more than one Seat in the Room." });
     }
+    const pendingOffer = room.seatOffers.find((offer) => offer.seatNumber === seatNumber && offer.status === "pending");
+    if (pendingOffer) {
+      throw new BadRequestException({ code: "SEAT_OFFER_ACCEPTANCE_REQUIRED", message: "Accept or decline the pending Seat Offer before claiming this Seat." });
+    }
 
     const seat = room.seats.find((candidate) => candidate.seatNumber === seatNumber);
     if (!seat) throw new BadRequestException({ code: "SEAT_NOT_FOUND", message: "Seat does not exist in this Room." });

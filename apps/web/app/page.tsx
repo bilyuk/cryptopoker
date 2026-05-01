@@ -43,9 +43,14 @@ export default function Home() {
           onDeal={() => roomClient.setScreen("table")}
           onApproveBuyIn={roomClient.approveBuyIn}
           onClaimSeat={roomClient.claimSeat}
+          onLeaveSeat={roomClient.leaveSeat}
           onInvitePreview={() => roomClient.setScreen("invite")}
           onCopyInvite={roomClient.copyInvite}
           onRequestBuyIn={roomClient.requestBuyIn}
+          onJoinWaitlist={roomClient.joinWaitlist}
+          onLeaveWaitlist={roomClient.leaveWaitlist}
+          onAcceptSeatOffer={roomClient.acceptSeatOffer}
+          onDeclineSeatOffer={roomClient.declineSeatOffer}
           onShareInvite={roomClient.shareInvite}
           inviteActionMessage={roomClient.inviteActionMessage}
           playerId={roomClient.playerId}

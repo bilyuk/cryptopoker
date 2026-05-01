@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RoomDto } from "@cryptopoker/contracts";
-import { toUiRoom } from "./room-view";
+import { toUiRoom, toUiRoomForPlayer } from "./room-view";
 
 const emptyRoom: RoomDto = {
   id: "room-1",
@@ -92,5 +92,38 @@ describe("Room view model", () => {
         amount: "$40.00",
       },
     ]);
+  });
+
+  it("exposes the current Player's Waitlist position and targeted Seat Offer", () => {
+    const room = toUiRoomForPlayer(
+      {
+        ...emptyRoom,
+        players: [
+          { playerId: "host-1", displayName: "codex_tester", role: "host" },
+          { playerId: "guest-1", displayName: "guest_tester", role: "player" },
+        ],
+        waitlist: [{ playerId: "guest-1", position: 1 }],
+        seatOffers: [
+          {
+            id: "offer-1",
+            roomId: "room-1",
+            playerId: "guest-1",
+            seatNumber: 2,
+            status: "pending",
+          },
+          {
+            id: "offer-2",
+            roomId: "room-1",
+            playerId: "host-1",
+            seatNumber: 3,
+            status: "pending",
+          },
+        ],
+      },
+      "guest-1",
+    );
+
+    expect(room.currentPlayerWaitlistPosition).toBe(1);
+    expect(room.currentPlayerSeatOffer).toEqual({ id: "offer-1", seatNumber: 2 });
   });
 });

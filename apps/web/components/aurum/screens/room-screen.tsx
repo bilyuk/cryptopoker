@@ -13,9 +13,14 @@ type RoomScreenProps = {
   onDeal: () => void;
   onApproveBuyIn: (buyInId: string) => void;
   onClaimSeat: (seatNumber: number) => void;
+  onLeaveSeat: () => void;
   onInvitePreview: () => void;
   onCopyInvite: () => void;
   onRequestBuyIn: () => void;
+  onJoinWaitlist: () => void;
+  onLeaveWaitlist: () => void;
+  onAcceptSeatOffer: (seatOfferId: string) => void;
+  onDeclineSeatOffer: (seatOfferId: string) => void;
   onShareInvite: () => void;
   inviteActionMessage?: string;
   onSignOut: () => void;
@@ -29,9 +34,14 @@ export function RoomScreen({
   onDeal,
   onApproveBuyIn,
   onClaimSeat,
+  onLeaveSeat,
   onInvitePreview,
   onCopyInvite,
   onRequestBuyIn,
+  onJoinWaitlist,
+  onLeaveWaitlist,
+  onAcceptSeatOffer,
+  onDeclineSeatOffer,
   onShareInvite,
   inviteActionMessage,
   onSignOut,
@@ -39,7 +49,22 @@ export function RoomScreen({
   const isHost = playerId === room.hostPlayerId;
   const currentPlayer = room.players.find((player) => player.playerId === playerId);
   const firstOpenSeat = room.openSeatNumbers[0];
-  const canClaimSeat = Boolean(currentPlayer && currentPlayer.buyInStatus === "host-verified" && !currentPlayer.seated && firstOpenSeat);
+  const canClaimSeat = Boolean(
+    currentPlayer &&
+      currentPlayer.buyInStatus === "host-verified" &&
+      !currentPlayer.seated &&
+      firstOpenSeat &&
+      !room.currentPlayerWaitlistPosition &&
+      !room.currentPlayerSeatOffer,
+  );
+  const canJoinWaitlist = Boolean(
+    currentPlayer &&
+      currentPlayer.buyInStatus === "host-verified" &&
+      !currentPlayer.seated &&
+      room.full &&
+      !room.currentPlayerWaitlistPosition &&
+      !room.currentPlayerSeatOffer,
+  );
   const canRequestBuyIn = Boolean(currentPlayer && currentPlayer.buyInStatus !== "pending" && currentPlayer.buyInStatus !== "host-verified");
   const canDeal = isHost && room.occupiedSeats >= 2;
 
@@ -94,6 +119,20 @@ export function RoomScreen({
                 <span className="font-mono text-xs text-gold-400">{room.buyIn}</span>
               </div>
               <p className="mt-3 text-xs text-sapphire-300">Request a Buy-In, wait for Host verification, then claim an open Seat.</p>
+              {room.currentPlayerSeatOffer && (
+                <div className="mt-4 rounded-md border border-gold-400/45 bg-gold-400/10 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold-400">Seat Offer</p>
+                  <p className="mt-2 text-sm text-ivory-100">Seat {room.currentPlayerSeatOffer.seatNumber} is open for you.</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <AurumButton className="min-h-10 px-3" onClick={() => onAcceptSeatOffer(room.currentPlayerSeatOffer!.id)}>
+                      Accept Seat
+                    </AurumButton>
+                    <AurumButton className="min-h-10 px-3" variant="ghost" onClick={() => onDeclineSeatOffer(room.currentPlayerSeatOffer!.id)}>
+                      Decline
+                    </AurumButton>
+                  </div>
+                </div>
+              )}
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <AurumButton className="min-h-10 px-3" disabled={!canRequestBuyIn} onClick={onRequestBuyIn}>
                   Request ${room.buyInMinValue}
@@ -101,12 +140,24 @@ export function RoomScreen({
                 <AurumButton className="min-h-10 px-3" disabled={!canClaimSeat} onClick={() => firstOpenSeat && onClaimSeat(firstOpenSeat)} variant="ghost">
                   Claim Seat {firstOpenSeat ?? ""}
                 </AurumButton>
+                <AurumButton className="min-h-10 px-3" disabled={!currentPlayer?.seated} onClick={onLeaveSeat} variant="ghost">
+                  Leave Seat
+                </AurumButton>
+                <AurumButton className="min-h-10 px-3" disabled={!canJoinWaitlist} onClick={onJoinWaitlist} variant="ghost">
+                  Join Waitlist
+                </AurumButton>
               </div>
               {currentPlayer && (
                 <p className="mt-3 text-xs text-sapphire-300">
                   Your status: <span className="font-semibold text-ivory-100">{formatBuyInStatus(currentPlayer.buyInStatus)}</span>
                   {currentPlayer.seated ? " - seated" : ""}
+                  {room.currentPlayerWaitlistPosition ? ` - Waitlist #${room.currentPlayerWaitlistPosition}` : ""}
                 </p>
+              )}
+              {room.currentPlayerWaitlistPosition && (
+                <AurumButton className="mt-3 min-h-10 px-3" onClick={onLeaveWaitlist} variant="ghost">
+                  Leave Waitlist
+                </AurumButton>
               )}
             </Panel>
           </div>

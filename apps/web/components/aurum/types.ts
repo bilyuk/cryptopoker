@@ -19,6 +19,8 @@ export type Room = {
   players: RoomPlayerSummary[];
   pendingBuyIns: RoomBuyInSummary[];
   openSeatNumbers: number[];
+  currentPlayerWaitlistPosition?: number;
+  currentPlayerSeatOffer?: RoomSeatOfferSummary;
   featured?: boolean;
   full?: boolean;
   private?: boolean;
@@ -44,6 +46,11 @@ export type RoomBuyInSummary = {
   playerId: string;
   displayName: string;
   amount: string;
+};
+
+export type RoomSeatOfferSummary = {
+  id: string;
+  seatNumber: number;
 };
 
 export type CreateRoomValues = {

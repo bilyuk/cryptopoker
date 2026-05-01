@@ -1,6 +1,6 @@
 # Seat Claiming and Leaving
 
-Status: ready-for-agent
+Status: ready-for-human
 
 ## Parent
 
@@ -17,7 +17,7 @@ Let Players with Host-Verified Buy-Ins claim open Seats, leave Seats between Han
 - [x] A Player cannot occupy more than one Seat in the Room.
 - [x] Seat capacity is enforced.
 - [x] A seated Player can leave their Seat while no Live Hand rules are involved in this slice.
-- [ ] The waiting-room UI renders server-backed Seats and Table Stack information.
+- [x] The waiting-room UI renders server-backed Seats and Table Stack information.
 - [x] Tests cover successful Seat claiming, unverified Player rejection, duplicate Seat prevention, capacity enforcement, and leaving a Seat.
 
 ## Blocked by

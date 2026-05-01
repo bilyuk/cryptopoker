@@ -91,6 +91,13 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
       expect(offer.status).toBe("pending");
       expect(opened.body.room.seats[0].playerId).toBeNull();
 
+      await request(server)
+        .post("/seats/claim")
+        .set("Cookie", thirdGuestCookie)
+        .send({ roomId, seatNumber: 1 })
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("SEAT_OFFER_ACCEPTANCE_REQUIRED"));
+
       const accepted = await request(server)
         .post(`/seat-offers/${offer.id}/accept`)
         .set("Cookie", thirdGuestCookie)

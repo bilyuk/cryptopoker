@@ -17,7 +17,7 @@ import type { AppScreen, CreateRoomValues, Room } from "@/components/aurum/types
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { readInviteCode } from "@/lib/invite-code";
 import { copyInviteLink, shareInviteLink } from "@/lib/invite-actions";
-import { toUiRoom } from "@/lib/room-view";
+import { toUiRoomForPlayer } from "@/lib/room-view";
 
 export function useRoomClient() {
   const [screen, setScreen] = useState<AppScreen>("welcome");
@@ -51,7 +51,7 @@ export function useRoomClient() {
           const roomResponse = await apiFetch(CURRENT_ROOM_PATH);
           if (roomResponse.ok) {
             const { room } = (await roomResponse.json()) as RoomResponse;
-            const nextRoom = toUiRoom(room);
+            const nextRoom = toUiRoomForPlayer(room, current.player.id);
             setRooms((currentRooms) => [nextRoom, ...currentRooms.filter((item) => item.id !== nextRoom.id).map((room) => ({ ...room, featured: false }))]);
             setSelectedRoomId(nextRoom.id);
             setScreen("waiting");
@@ -135,7 +135,7 @@ export function useRoomClient() {
     if (!response.ok) return;
 
     const { room } = (await response.json()) as RoomResponse;
-    const nextRoom = toUiRoom(room);
+    const nextRoom = toUiRoomForPlayer(room, playerId);
 
     setRooms((current) => [nextRoom, ...current.map((room) => ({ ...room, featured: false }))]);
     setSelectedRoomId(nextRoom.id);
@@ -155,7 +155,7 @@ export function useRoomClient() {
     }
 
     const { room } = (await response.json()) as RoomResponse;
-    const nextRoom = toUiRoom(room);
+    const nextRoom = toUiRoomForPlayer(room, playerId);
     setRooms((current) => current.map((item) => (item.id === nextRoom.id ? nextRoom : item)));
     setSelectedRoomId(nextRoom.id);
     setInviteJoinError(undefined);
@@ -176,7 +176,7 @@ export function useRoomClient() {
     }
 
     const { room } = (await response.json()) as RoomResponse;
-    const nextRoom = toUiRoom(room);
+    const nextRoom = toUiRoomForPlayer(room, playerId);
     setRooms((current) => [nextRoom, ...current.filter((item) => item.id !== nextRoom.id).map((room) => ({ ...room, featured: false }))]);
     setSelectedRoomId(nextRoom.id);
     setInviteJoinError(undefined);
@@ -251,22 +251,71 @@ export function useRoomClient() {
     }
   }
 
+  async function leaveSeat() {
+    const response = await apiFetch("/seats/leave", {
+      method: "POST",
+      body: JSON.stringify({ roomId: selectedRoom.id }),
+    });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
+  async function joinWaitlist() {
+    const response = await apiFetch("/waitlist/join", {
+      method: "POST",
+      body: JSON.stringify({ roomId: selectedRoom.id }),
+    });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
+  async function leaveWaitlist() {
+    const response = await apiFetch("/waitlist/leave", {
+      method: "POST",
+      body: JSON.stringify({ roomId: selectedRoom.id }),
+    });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
+  async function acceptSeatOffer(seatOfferId: string) {
+    const response = await apiFetch(`/seat-offers/${seatOfferId}/accept`, { method: "POST" });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
+  async function declineSeatOffer(seatOfferId: string) {
+    const response = await apiFetch(`/seat-offers/${seatOfferId}/decline`, { method: "POST" });
+    if (response.ok) {
+      await refetchCurrentRoom();
+    }
+  }
+
   async function refetchCurrentRoom() {
     const response = await apiFetch(CURRENT_ROOM_PATH);
     if (!response.ok) return;
 
     const { room } = (await response.json()) as RoomResponse;
-    const nextRoom = toUiRoom(room);
+    const nextRoom = toUiRoomForPlayer(room, playerId);
     setRooms((current) => current.map((item) => (item.id === nextRoom.id ? nextRoom : item)));
   }
 
   return {
+    acceptSeatOffer,
     approveBuyIn,
     claimSeat,
     createRoom,
+    declineSeatOffer,
     copyInvite,
     enterLobby,
     joinInvite,
+    joinWaitlist,
+    leaveSeat,
+    leaveWaitlist,
     openRoom,
     playerId,
     playerName,

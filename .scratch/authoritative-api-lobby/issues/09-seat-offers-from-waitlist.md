@@ -1,6 +1,6 @@
 # Seat Offers from Waitlist
 
-Status: ready-for-agent
+Status: ready-for-human
 
 ## Parent
 
@@ -18,7 +18,7 @@ When a Seat opens, create a Seat Offer for the first eligible waitlisted Player.
 - [x] The offered Player can decline the Seat Offer.
 - [x] An expired or declined Seat Offer advances to the next eligible waitlisted Player.
 - [x] A Player who is no longer eligible cannot accept an old Seat Offer.
-- [ ] The UI shows the targeted Seat Offer state to the offered Player.
+- [x] The UI shows the targeted Seat Offer state to the offered Player.
 - [x] Tests cover offer creation, accept, decline, expiry, advancement, and stale offer rejection.
 
 ## Blocked by

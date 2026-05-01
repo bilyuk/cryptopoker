@@ -8,7 +8,10 @@
     "dev": "turbo dev --parallel",
     "build": "turbo build",
     "test": "turbo test",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres"
   },
   "devDependencies": {
     "turbo": "^2.6.1",

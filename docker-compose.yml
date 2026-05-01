@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cryptopoker-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cryptopoker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cryptopoker}
+      POSTGRES_DB: ${POSTGRES_DB:-cryptopoker}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cryptopoker} -d ${POSTGRES_DB:-cryptopoker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - cryptopoker-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  cryptopoker-postgres-data:

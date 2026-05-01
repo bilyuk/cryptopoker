@@ -1,7 +1,7 @@
 import { Body, Controller, Headers, Param, Post } from "@nestjs/common";
 import type { BuyInResponse, RequestBuyInRequest } from "@cryptopoker/contracts";
 import { SessionStore } from "../sessions/session.store.js";
-import { requirePlayer } from "./auth.js";
+import { currentPlayerFromCookie } from "../sessions/current-player.js";
 import { LobbyStore } from "./lobby.store.js";
 
 @Controller()
@@ -13,19 +13,19 @@ export class BuyInsController {
 
   @Post("/buy-ins")
   requestBuyIn(@Headers("cookie") cookieHeader: string | undefined, @Body() body: RequestBuyInRequest): BuyInResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { buyIn: this.lobby.requestBuyIn(player, body.roomId, body.amount) };
   }
 
   @Post("/buy-ins/:buyInId/approve")
   approveBuyIn(@Headers("cookie") cookieHeader: string | undefined, @Param("buyInId") buyInId: string): BuyInResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { buyIn: this.lobby.approveBuyIn(player, buyInId) };
   }
 
   @Post("/buy-ins/:buyInId/reject")
   rejectBuyIn(@Headers("cookie") cookieHeader: string | undefined, @Param("buyInId") buyInId: string): BuyInResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { buyIn: this.lobby.rejectBuyIn(player, buyInId) };
   }
 }

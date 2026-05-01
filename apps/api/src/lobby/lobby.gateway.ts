@@ -1,7 +1,7 @@
 import { OnGatewayConnection, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Inject } from "@nestjs/common";
 import type { Server, Socket } from "socket.io";
-import { readSessionCookie } from "../sessions/session-cookie.js";
+import { currentPlayerFromCookie } from "../sessions/current-player.js";
 import { SessionStore } from "../sessions/session.store.js";
 import { LobbyStore } from "./lobby.store.js";
 import { playerChannel, RealtimeService, roomChannel } from "./realtime.service.js";
@@ -31,15 +31,13 @@ export class LobbyGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   handleConnection(client: AuthenticatedSocket): void {
-    const cookieHeader = client.handshake.headers.cookie;
-    const player = this.sessions.findPlayerBySession(readSessionCookie(cookieHeader));
-    if (!player) {
+    try {
+      const player = currentPlayerFromCookie(this.sessions, client.handshake.headers.cookie).require();
+      client.data.playerId = player.id;
+      void client.join(playerChannel(player.id));
+    } catch {
       client.disconnect(true);
-      return;
     }
-
-    client.data.playerId = player.id;
-    void client.join(playerChannel(player.id));
   }
 
   @SubscribeMessage("room.subscribe")

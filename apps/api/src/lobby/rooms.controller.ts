@@ -7,7 +7,7 @@ import {
   type UpdateRoomSettingsRequest,
 } from "@cryptopoker/contracts";
 import { SessionStore } from "../sessions/session.store.js";
-import { requirePlayer } from "./auth.js";
+import { currentPlayerFromCookie } from "../sessions/current-player.js";
 import { LobbyStore } from "./lobby.store.js";
 
 @Controller()
@@ -19,13 +19,13 @@ export class RoomsController {
 
   @Post(ROOMS_PATH)
   createRoom(@Headers("cookie") cookieHeader: string | undefined, @Body() body: CreateRoomRequest): RoomResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.createRoom(player, body) };
   }
 
   @Get(CURRENT_ROOM_PATH)
   currentRoom(@Headers("cookie") cookieHeader: string | undefined): RoomResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.currentRoom(player) };
   }
 
@@ -35,13 +35,13 @@ export class RoomsController {
     @Param("roomId") roomId: string,
     @Body() body: UpdateRoomSettingsRequest,
   ): RoomResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.updateSettings(player, roomId, body) };
   }
 
   @Post("/rooms/:roomId/rotate-invite")
   rotateInvite(@Headers("cookie") cookieHeader: string | undefined, @Param("roomId") roomId: string): RoomResponse {
-    const player = requirePlayer(this.sessions, cookieHeader);
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.rotateInvite(player, roomId) };
   }
 }

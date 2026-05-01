@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { Server } from "socket.io";
 import { REALTIME_EVENTS } from "@cryptopoker/contracts";
+import type { LobbyCommandEvent } from "./command-events.js";
 
 export const ROOM_UPDATED_EVENT = REALTIME_EVENTS.roomUpdated;
 export const BUY_IN_UPDATED_EVENT = REALTIME_EVENTS.buyInUpdated;
@@ -16,6 +17,32 @@ export class RealtimeService {
 
   attach(server: Server): void {
     this.server = server;
+  }
+
+  emit(event: LobbyCommandEvent): void {
+    switch (event.type) {
+      case "player.updated":
+        this.emitPlayerUpdated(event.playerId);
+        return;
+      case "room.updated":
+        this.emitRoomUpdated(event.roomId);
+        return;
+      case "buyIn.updated":
+        this.emitBuyInUpdated(event.roomId, event.buyInId);
+        return;
+      case "seat.updated":
+        this.emitSeatUpdated(event.roomId);
+        return;
+      case "waitlist.updated":
+        this.emitWaitlistUpdated(event.roomId);
+        return;
+      case "seatOffer.created":
+        this.emitSeatOfferCreated(event.roomId, event.playerId, event.seatOfferId);
+        return;
+      case "seatOffer.updated":
+        this.emitSeatOfferUpdated(event.roomId, event.playerId, event.seatOfferId);
+        return;
+    }
   }
 
   emitRoomUpdated(roomId: string): void {

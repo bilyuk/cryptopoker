@@ -28,6 +28,8 @@ export const PrivateRoom: Story = {
     onBackToLobby: () => undefined,
     onDeal: () => undefined,
     onInvitePreview: () => undefined,
+    onCopyInvite: () => undefined,
+    onShareInvite: () => undefined,
     onSignOut: () => undefined,
   },
 };

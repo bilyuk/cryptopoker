@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Inject, Param, Patch, Post } from "@nestjs/common";
 import {
   CURRENT_ROOM_PATH,
   ROOMS_PATH,
@@ -13,7 +13,9 @@ import { LobbyStore } from "./lobby.store.js";
 @Controller()
 export class RoomsController {
   constructor(
+    @Inject(SessionStore)
     private readonly sessions: SessionStore,
+    @Inject(LobbyStore)
     private readonly lobby: LobbyStore,
   ) {}
 

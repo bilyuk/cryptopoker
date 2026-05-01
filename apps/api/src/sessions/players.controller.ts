@@ -1,13 +1,14 @@
-import { Body, Controller, Get, Headers, HttpCode, Patch, Post, Res } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Headers, HttpCode, Inject, Patch, Post, Res } from "@nestjs/common";
 import {
   CURRENT_PLAYER_DISPLAY_NAME_PATH,
   CURRENT_PLAYER_PATH,
+  CURRENT_PLAYER_SESSION_PATH,
   PLAYERS_PATH,
   type CreateGuestSessionRequest,
   type CurrentPlayerResponse,
   type UpdateDisplayNameRequest,
 } from "@cryptopoker/contracts";
-import { createSessionCookie } from "./session-cookie.js";
+import { clearSessionCookie, createSessionCookie, readSessionCookie } from "./session-cookie.js";
 import { currentPlayerFromCookie } from "./current-player.js";
 import { SessionStore } from "./session.store.js";
 
@@ -17,7 +18,7 @@ type HeaderResponse = {
 
 @Controller()
 export class PlayersController {
-  constructor(private readonly sessions: SessionStore) {}
+  constructor(@Inject(SessionStore) private readonly sessions: SessionStore) {}
 
   @Post(PLAYERS_PATH)
   @HttpCode(201)
@@ -35,5 +36,12 @@ export class PlayersController {
   @Patch(CURRENT_PLAYER_DISPLAY_NAME_PATH)
   updateDisplayName(@Headers("cookie") cookieHeader: string | undefined, @Body() body: UpdateDisplayNameRequest): CurrentPlayerResponse {
     return { player: currentPlayerFromCookie(this.sessions, cookieHeader).updateDisplayName(body.displayName) };
+  }
+
+  @Delete(CURRENT_PLAYER_SESSION_PATH)
+  @HttpCode(204)
+  deleteCurrentSession(@Headers("cookie") cookieHeader: string | undefined, @Res({ passthrough: true }) response: HeaderResponse): void {
+    this.sessions.deleteSession(readSessionCookie(cookieHeader));
+    response.setHeader("Set-Cookie", clearSessionCookie());
   }
 }

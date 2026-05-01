@@ -4,17 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import {
   CURRENT_PLAYER_PATH,
+  CURRENT_PLAYER_SESSION_PATH,
   CURRENT_ROOM_PATH,
   PLAYERS_PATH,
   REALTIME_EVENTS,
   ROOMS_PATH,
   type CurrentPlayerResponse,
-  type RoomDto,
   type RoomResponse,
 } from "@cryptopoker/contracts";
 import { defaultRooms } from "@/components/aurum/data";
 import type { AppScreen, CreateRoomValues, Room } from "@/components/aurum/types";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
+import { readInviteCode } from "@/lib/invite-code";
+import { copyInviteLink, shareInviteLink } from "@/lib/invite-actions";
+import { toUiRoom } from "@/lib/room-view";
 
 export function useRoomClient() {
   const [screen, setScreen] = useState<AppScreen>("welcome");
@@ -23,6 +26,8 @@ export function useRoomClient() {
   const [sessionError, setSessionError] = useState<string>();
   const [rooms, setRooms] = useState<Room[]>(defaultRooms);
   const [selectedRoomId, setSelectedRoomId] = useState(defaultRooms[0].id);
+  const [inviteActionMessage, setInviteActionMessage] = useState<string>();
+  const [inviteJoinError, setInviteJoinError] = useState<string>();
 
   const selectedRoom = useMemo(
     () => rooms.find((room) => room.id === selectedRoomId) ?? rooms[0],
@@ -125,16 +130,84 @@ export function useRoomClient() {
   }
 
   async function joinInvite() {
-    if (!selectedRoom.inviteCode) return;
+    if (!selectedRoom.inviteCode) {
+      setInviteJoinError("Invite link is not available for this room.");
+      return;
+    }
 
     const response = await apiFetch(`/invite-links/${selectedRoom.inviteCode}/join`, { method: "POST" });
-    if (!response.ok) return;
+    if (!response.ok) {
+      setInviteJoinError("You cannot join that Room from this browser right now.");
+      return;
+    }
 
     const { room } = (await response.json()) as RoomResponse;
     const nextRoom = toUiRoom(room);
     setRooms((current) => current.map((item) => (item.id === nextRoom.id ? nextRoom : item)));
     setSelectedRoomId(nextRoom.id);
+    setInviteJoinError(undefined);
     setScreen("waiting");
+  }
+
+  async function previewInviteLink(input: string) {
+    const inviteCode = readInviteCode(input);
+    if (!inviteCode) {
+      setInviteJoinError("Paste a valid Invite Link or code.");
+      return;
+    }
+
+    const response = await apiFetch(`/invite-links/${inviteCode}`);
+    if (!response.ok) {
+      setInviteJoinError("That Invite Link is invalid or expired.");
+      return;
+    }
+
+    const { room } = (await response.json()) as RoomResponse;
+    const nextRoom = toUiRoom(room);
+    setRooms((current) => [nextRoom, ...current.filter((item) => item.id !== nextRoom.id).map((room) => ({ ...room, featured: false }))]);
+    setSelectedRoomId(nextRoom.id);
+    setInviteJoinError(undefined);
+    setScreen("invite");
+  }
+
+  async function copyInvite() {
+    if (!selectedRoom.inviteCode) {
+      setInviteActionMessage("Invite link is not available for this room.");
+      return;
+    }
+
+    const result = await copyInviteLink({
+      origin: window.location.origin,
+      inviteCode: selectedRoom.inviteCode,
+      clipboard: navigator.clipboard,
+    });
+    setInviteActionMessage(result.message);
+  }
+
+  async function shareInvite() {
+    if (!selectedRoom.inviteCode) {
+      setInviteActionMessage("Invite link is not available for this room.");
+      return;
+    }
+
+    const result = await shareInviteLink({
+      origin: window.location.origin,
+      inviteCode: selectedRoom.inviteCode,
+      roomName: selectedRoom.name,
+      share: navigator.share?.bind(navigator),
+      clipboard: navigator.clipboard,
+    });
+    setInviteActionMessage(result.message);
+  }
+
+  async function signOut() {
+    try {
+      await apiFetch(CURRENT_PLAYER_SESSION_PATH, { method: "DELETE" });
+    } finally {
+      setScreen("welcome");
+      setInviteJoinError(undefined);
+      setInviteActionMessage(undefined);
+    }
   }
 
   async function refetchCurrentRoom() {
@@ -148,34 +221,22 @@ export function useRoomClient() {
 
   return {
     createRoom,
+    copyInvite,
     enterLobby,
     joinInvite,
     openRoom,
     playerName,
+    previewInviteLink,
     rooms,
     screen,
     selectedRoom,
     sessionBusy,
     sessionError,
     setScreen,
-  };
-}
-
-function toUiRoom(room: RoomDto): Room {
-  const occupiedSeats = room.seats.filter((seat) => seat.playerId).length;
-  return {
-    id: room.id,
-    inviteCode: room.inviteCode,
-    name: room.settings.name,
-    variant: "No Limit Hold'em",
-    blinds: `$${room.settings.smallBlind}/$${room.settings.bigBlind}`,
-    buyIn: `$${room.settings.buyInMin}-$${room.settings.buyInMax}`,
-    seats: `${occupiedSeats}/${room.settings.seatCount}`,
-    timer: `${room.settings.actionTimerSeconds}s`,
-    featured: true,
-    private: true,
-    status: occupiedSeats >= room.settings.seatCount ? "Full" : "Seats open",
-    full: occupiedSeats >= room.settings.seatCount,
+    shareInvite,
+    signOut,
+    inviteJoinError,
+    inviteActionMessage,
   };
 }
 

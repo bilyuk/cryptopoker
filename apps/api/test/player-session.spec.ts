@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   CURRENT_PLAYER_DISPLAY_NAME_PATH,
   CURRENT_PLAYER_PATH,
+  CURRENT_PLAYER_SESSION_PATH,
   PLAYERS_PATH,
   SESSION_COOKIE_NAME,
 } from "@cryptopoker/contracts";
@@ -51,6 +52,42 @@ describe("persistent Player session", () => {
         id: created.body.player.id,
         displayName: "river_rat",
       });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("clears the persistent Player session so the same browser cookie cannot resume", async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+
+      const created = await request(server)
+        .post(PLAYERS_PATH)
+        .send({ displayName: "riverrat" })
+        .expect(201);
+      const sessionCookie = readSetCookie(created.headers["set-cookie"])?.[0];
+      expect(sessionCookie).toBeDefined();
+
+      const signedOut = await request(server)
+        .delete(CURRENT_PLAYER_SESSION_PATH)
+        .set("Cookie", sessionCookie ?? "")
+        .expect(204);
+
+      const clearedCookie = readSetCookie(signedOut.headers["set-cookie"])?.[0];
+      expect(clearedCookie).toContain(`${SESSION_COOKIE_NAME}=`);
+      expect(clearedCookie).toContain("Max-Age=0");
+
+      await request(server)
+        .get(CURRENT_PLAYER_PATH)
+        .set("Cookie", sessionCookie ?? "")
+        .expect(404)
+        .expect(({ body }) => expect(body.code).toBe("PLAYER_SESSION_NOT_FOUND"));
     } finally {
       await app.close();
     }

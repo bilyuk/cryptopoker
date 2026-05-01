@@ -6,6 +6,10 @@ export function createSessionCookie(sessionId: string): string {
   return `${SESSION_COOKIE_NAME}=${sessionId}; HttpOnly; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax`;
 }
 
+export function clearSessionCookie(): string {
+  return `${SESSION_COOKIE_NAME}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
 export function readSessionCookie(cookieHeader: string | undefined): string | undefined {
   if (!cookieHeader) return undefined;
 

@@ -11,10 +11,23 @@ type RoomScreenProps = {
   onBackToLobby: () => void;
   onDeal: () => void;
   onInvitePreview: () => void;
+  onCopyInvite: () => void;
+  onShareInvite: () => void;
+  inviteActionMessage?: string;
   onSignOut: () => void;
 };
 
-export function RoomScreen({ playerName, room, onBackToLobby, onDeal, onInvitePreview, onSignOut }: RoomScreenProps) {
+export function RoomScreen({
+  playerName,
+  room,
+  onBackToLobby,
+  onDeal,
+  onInvitePreview,
+  onCopyInvite,
+  onShareInvite,
+  inviteActionMessage,
+  onSignOut,
+}: RoomScreenProps) {
   return (
     <main className="relative min-h-screen p-3 pb-28 md:p-6">
       <Header mode="Waiting room" playerName={playerName} onInvitePreview={onInvitePreview} onSignOut={onSignOut} />
@@ -45,29 +58,34 @@ export function RoomScreen({ playerName, room, onBackToLobby, onDeal, onInvitePr
                 <p className="overflow-hidden rounded-lg bg-sapphire-950/70 px-3 py-3 font-mono text-xs text-gold-400">
                   cryptopoker.game/r/{room.inviteCode ?? room.id}
                 </p>
-                <AurumButton className="min-h-10 px-4" onClick={onInvitePreview}>
+                <AurumButton className="min-h-10 px-4" onClick={onCopyInvite}>
                   <Copy size={14} />
                   Copy
                 </AurumButton>
-                <AurumButton className="min-h-10 px-4" variant="ghost" onClick={onInvitePreview}>
+                <AurumButton className="min-h-10 px-4" variant="ghost" onClick={onShareInvite}>
                   <Share2 size={14} />
                   Share
                 </AurumButton>
               </div>
-              <p className="mt-3 text-xs text-sapphire-400">Anyone with this link can join. 3 of 6 seats filled.</p>
+              {inviteActionMessage && <p className="mt-3 text-xs font-semibold text-gold-400">{inviteActionMessage}</p>}
+              <p className="mt-3 text-xs text-sapphire-400">
+                Anyone with this link can join. {room.occupiedSeats} of {room.seatCount} seats filled.
+              </p>
             </Panel>
           </div>
 
           <Panel className="p-5 md:p-6">
             <div className="flex items-center justify-between">
               <p className="aurum-eyebrow">At the table</p>
-              <span className="font-mono text-xs text-gold-400">3 / 6</span>
+              <span className="font-mono text-xs text-gold-400">
+                {room.occupiedSeats} / {room.seatCount}
+              </span>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {["riverrat · host", "magpie", "kings_up", "Seat 4 - waiting...", "Seat 5 - waiting...", "Seat 6 - waiting..."].map((seat, index) => (
-                <div className="rounded-md border border-champagne-500/20 bg-sapphire-950/60 p-3 text-xs text-sapphire-200" key={seat}>
-                  <span className="font-medium text-ivory-100">{seat}</span>
-                  {index < 3 && <p className="aurum-action-detail mt-1">$200.00</p>}
+              {room.seatLabels.map((seat) => (
+                <div className="rounded-md border border-champagne-500/20 bg-sapphire-950/60 p-3 text-xs text-sapphire-200" key={seat.label}>
+                  <span className="font-medium text-ivory-100">{seat.label}</span>
+                  {seat.stack && <p className="aurum-action-detail mt-1">{seat.stack}</p>}
                 </div>
               ))}
             </div>
@@ -77,7 +95,7 @@ export function RoomScreen({ playerName, room, onBackToLobby, onDeal, onInvitePr
         <div className="fixed inset-x-3 bottom-4 z-20 grid gap-3 sm:static sm:mt-7 sm:grid-cols-[1fr_auto]">
           <p className="hidden items-center gap-2 text-xs text-ivory-100 sm:flex">
             <span className="size-1.5 rounded-full bg-verified-400" />
-            Need at least 2 players. 3 seated. Ready when you are.
+            Need at least 2 players. {room.occupiedSeats} seated. {room.occupiedSeats >= 2 ? "Ready when you are." : "Waiting for more Players."}
           </p>
           <div className="grid grid-cols-[0.9fr_1.5fr] gap-3">
             <AurumButton variant="ghost" onClick={onBackToLobby}>

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { BuyInDto, PlayerDto, RoomDto, RoomSettingsDto, SeatOfferDto } from "@cryptopoker/contracts";
 import { commandResult, type CommandResult } from "./command-events.js";
 import { RealtimeService } from "./realtime.service.js";
@@ -13,7 +13,7 @@ export class LobbyStore {
   private readonly activeRoomIdByPlayerId = new Map<string, string>();
   private readonly tableSeating = new TableSeating();
 
-  constructor(private readonly realtime: RealtimeService) {}
+  constructor(@Inject(RealtimeService) private readonly realtime: RealtimeService) {}
 
   createRoom(host: PlayerDto, settings: RoomSettingsDto): RoomDto {
     this.assertNoActiveRoom(host.id);

@@ -10,9 +10,10 @@ type InviteScreenProps = {
   onJoin: () => void;
   onSignIn: () => void;
   onBack: () => void;
+  error?: string;
 };
 
-export function InviteScreen({ hostName, room, onJoin, onSignIn, onBack }: InviteScreenProps) {
+export function InviteScreen({ hostName, room, onJoin, onSignIn, onBack, error }: InviteScreenProps) {
   return (
     <main className="relative min-h-screen p-3 sm:grid sm:place-items-center sm:p-6">
       <header className="flex h-12 items-center justify-between rounded-[18px] border border-champagne-500/25 bg-sapphire-900/70 px-2 pl-2 shadow-[0_10px_24px_-10px_rgb(0_0_0_/_0.34)] backdrop-blur md:hidden">
@@ -49,6 +50,7 @@ export function InviteScreen({ hostName, room, onJoin, onSignIn, onBack }: Invit
           Take a Seat
           <ArrowRight size={15} />
         </AurumButton>
+        {error && <p className="text-sm font-semibold text-rose-200">{error}</p>}
         <AurumButton className="min-h-10" variant="ghost" onClick={onSignIn}>
           Sign In to Join
         </AurumButton>

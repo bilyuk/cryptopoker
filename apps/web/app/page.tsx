@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { API_HEALTH_PATH } from "@cryptopoker/contracts";
 import { CreateRoomScreen } from "@/components/aurum/screens/create-room-screen";
 import { InviteScreen } from "@/components/aurum/screens/invite-screen";
+import { JoinInviteScreen } from "@/components/aurum/screens/join-invite-screen";
 import { LobbyScreen } from "@/components/aurum/screens/lobby-screen";
 import { RoomScreen } from "@/components/aurum/screens/room-screen";
 import { TableScreen } from "@/components/aurum/screens/table-screen";
@@ -29,9 +30,9 @@ export default function Home() {
           playerName={roomClient.playerName}
           rooms={roomClient.rooms}
           onCreateRoom={() => roomClient.setScreen("create")}
-          onInvitePreview={() => roomClient.setScreen("invite")}
+          onInvitePreview={() => roomClient.setScreen("join")}
           onOpenRoom={roomClient.openRoom}
-          onSignOut={() => roomClient.setScreen("welcome")}
+          onSignOut={roomClient.signOut}
         />
       )}
       {roomClient.screen === "waiting" && (
@@ -41,7 +42,10 @@ export default function Home() {
           onBackToLobby={() => roomClient.setScreen("lobby")}
           onDeal={() => roomClient.setScreen("table")}
           onInvitePreview={() => roomClient.setScreen("invite")}
-          onSignOut={() => roomClient.setScreen("welcome")}
+          onCopyInvite={roomClient.copyInvite}
+          onShareInvite={roomClient.shareInvite}
+          inviteActionMessage={roomClient.inviteActionMessage}
+          onSignOut={roomClient.signOut}
         />
       )}
       {roomClient.screen === "table" && (
@@ -49,7 +53,7 @@ export default function Home() {
           playerName={roomClient.playerName}
           room={roomClient.selectedRoom}
           onLeave={() => roomClient.setScreen("waiting")}
-          onSignOut={() => roomClient.setScreen("welcome")}
+          onSignOut={roomClient.signOut}
         />
       )}
       {roomClient.screen === "create" && (
@@ -57,7 +61,16 @@ export default function Home() {
           playerName={roomClient.playerName}
           onCancel={() => roomClient.setScreen("lobby")}
           onCreate={roomClient.createRoom}
-          onSignOut={() => roomClient.setScreen("welcome")}
+          onSignOut={roomClient.signOut}
+        />
+      )}
+      {roomClient.screen === "join" && (
+        <JoinInviteScreen
+          playerName={roomClient.playerName}
+          error={roomClient.inviteJoinError}
+          onBack={() => roomClient.setScreen("lobby")}
+          onJoinLink={roomClient.previewInviteLink}
+          onSignOut={roomClient.signOut}
         />
       )}
       {roomClient.screen === "invite" && (
@@ -65,8 +78,9 @@ export default function Home() {
           hostName={roomClient.playerName}
           room={roomClient.selectedRoom}
           onJoin={roomClient.joinInvite}
-          onSignIn={() => roomClient.setScreen("welcome")}
+          onSignIn={roomClient.signOut}
           onBack={() => roomClient.setScreen("lobby")}
+          error={roomClient.inviteJoinError}
         />
       )}
     </div>

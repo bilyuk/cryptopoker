@@ -46,6 +46,11 @@ export class SessionStore {
   findPlayerById(playerId: string): PlayerDto | undefined {
     return this.players.get(playerId);
   }
+
+  deleteSession(sessionId: string | undefined): void {
+    if (!sessionId) return;
+    this.sessions.delete(sessionId);
+  }
 }
 
 function normalizeDisplayName(displayName: string): string {

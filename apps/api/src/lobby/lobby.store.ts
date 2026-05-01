@@ -1,19 +1,26 @@
 import { randomUUID } from "node:crypto";
 import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { BuyInDto, PlayerDto, RoomDto, RoomSettingsDto, SeatOfferDto } from "@cryptopoker/contracts";
+import { SessionStore } from "../sessions/session.store.js";
 import { commandResult, type CommandResult } from "./command-events.js";
 import { RealtimeService } from "./realtime.service.js";
 import { createInviteCode, normalizeRoomSettings, type RoomRecord, toRoomDto } from "./room-record.js";
-import { TableSeating } from "./table-seating.js";
+import * as tableSeating from "./table-seating.js";
 
 @Injectable()
 export class LobbyStore {
   private readonly rooms = new Map<string, RoomRecord>();
   private readonly roomIdByInviteCode = new Map<string, string>();
   private readonly activeRoomIdByPlayerId = new Map<string, string>();
-  private readonly tableSeating = new TableSeating();
+  private readonly roomIdByBuyInId = new Map<string, string>();
+  private readonly roomIdBySeatOfferId = new Map<string, string>();
 
-  constructor(@Inject(RealtimeService) private readonly realtime: RealtimeService) {}
+  constructor(
+    @Inject(RealtimeService) private readonly realtime: RealtimeService,
+    @Inject(SessionStore) sessions: SessionStore,
+  ) {
+    sessions.onPlayerForgotten((playerId) => this.activeRoomIdByPlayerId.delete(playerId));
+  }
 
   createRoom(host: PlayerDto, settings: RoomSettingsDto): RoomDto {
     this.assertNoActiveRoom(host.id);
@@ -75,9 +82,10 @@ export class LobbyStore {
     room.joinedPlayerIds.add(player.id);
     room.players.push({ playerId: player.id, displayName: player.displayName, role: "player" });
     this.activeRoomIdByPlayerId.set(player.id, room.id);
-    return this.commit(commandResult(toRoomDto(room), [
+    const dto = toRoomDto(room);
+    return this.commit(commandResult(dto, [
       { type: "player.updated", playerId: player.id },
-      { type: "room.updated", roomId: room.id },
+      { type: "room.updated", room: dto },
     ]));
   }
 
@@ -98,7 +106,8 @@ export class LobbyStore {
         tableStack: null,
       });
     }
-    return this.commit(commandResult(toRoomDto(room), [{ type: "room.updated", roomId: room.id }]));
+    const dto = toRoomDto(room);
+    return this.commit(commandResult(dto, [{ type: "room.updated", room: dto }]));
   }
 
   rotateInvite(actor: PlayerDto, roomId: string): RoomDto {
@@ -108,7 +117,8 @@ export class LobbyStore {
     this.roomIdByInviteCode.delete(room.inviteCode);
     room.inviteCode = createInviteCode();
     this.roomIdByInviteCode.set(room.inviteCode, room.id);
-    return this.commit(commandResult(toRoomDto(room), [{ type: "room.updated", roomId: room.id }]));
+    const dto = toRoomDto(room);
+    return this.commit(commandResult(dto, [{ type: "room.updated", room: dto }]));
   }
 
   requestBuyIn(player: PlayerDto, roomId: string, amount: number): BuyInDto {
@@ -125,56 +135,57 @@ export class LobbyStore {
       status: "pending",
     };
     room.buyIns.push(buyIn);
-    return this.commit(commandResult({ ...buyIn }, [{ type: "buyIn.updated", roomId: room.id, buyInId: buyIn.id }]));
+    this.roomIdByBuyInId.set(buyIn.id, room.id);
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
   }
 
   approveBuyIn(actor: PlayerDto, buyInId: string): BuyInDto {
     const { room, buyIn } = this.requireBuyIn(buyInId);
     this.assertHost(actor, room);
     buyIn.status = "host-verified";
-    return this.commit(commandResult({ ...buyIn }, [{ type: "buyIn.updated", roomId: room.id, buyInId: buyIn.id }]));
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
   }
 
   rejectBuyIn(actor: PlayerDto, buyInId: string): BuyInDto {
     const { room, buyIn } = this.requireBuyIn(buyInId);
     this.assertHost(actor, room);
     buyIn.status = "rejected";
-    return this.commit(commandResult({ ...buyIn }, [{ type: "buyIn.updated", roomId: room.id, buyInId: buyIn.id }]));
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
   }
 
   claimSeat(player: PlayerDto, roomId: string, seatNumber: number): RoomDto {
     const room = this.requireJoinedRoom(player, roomId);
-    return this.commit(this.tableSeating.claimSeat(player, room, seatNumber));
+    return this.commit(tableSeating.claimSeat(player, room, seatNumber));
   }
 
   leaveSeat(player: PlayerDto, roomId: string): RoomDto {
     const room = this.requireJoinedRoom(player, roomId);
-    return this.commit(this.tableSeating.leaveSeat(player, room));
+    return this.commit(tableSeating.leaveSeat(player, room));
   }
 
   joinWaitlist(player: PlayerDto, roomId: string): RoomDto {
     const room = this.requireJoinedRoom(player, roomId);
-    return this.commit(this.tableSeating.joinWaitlist(player, room));
+    return this.commit(tableSeating.joinWaitlist(player, room));
   }
 
   leaveWaitlist(player: PlayerDto, roomId: string): RoomDto {
     const room = this.requireJoinedRoom(player, roomId);
-    return this.commit(this.tableSeating.leaveWaitlist(player, room));
+    return this.commit(tableSeating.leaveWaitlist(player, room));
   }
 
   acceptSeatOffer(player: PlayerDto, seatOfferId: string): RoomDto {
     const { room, offer } = this.requireSeatOffer(seatOfferId);
-    return this.commit(this.tableSeating.acceptSeatOffer(player, room, offer));
+    return this.commit(tableSeating.acceptSeatOffer(player, room, offer));
   }
 
   declineSeatOffer(player: PlayerDto, seatOfferId: string): SeatOfferDto {
     const { room, offer } = this.requireSeatOffer(seatOfferId);
-    return this.commit(this.tableSeating.declineSeatOffer(player, room, offer));
+    return this.commit(tableSeating.declineSeatOffer(player, room, offer));
   }
 
   expireSeatOffer(seatOfferId: string): SeatOfferDto {
     const { room, offer } = this.requireSeatOffer(seatOfferId);
-    return this.commit(this.tableSeating.expireSeatOffer(room, offer));
+    return this.commit(tableSeating.expireSeatOffer(room, offer));
   }
 
   private requireJoinedRoom(player: PlayerDto, roomId: string): RoomRecord {
@@ -186,19 +197,23 @@ export class LobbyStore {
   }
 
   private requireBuyIn(buyInId: string): { room: RoomRecord; buyIn: BuyInDto } {
-    for (const room of this.rooms.values()) {
-      const buyIn = room.buyIns.find((candidate) => candidate.id === buyInId);
-      if (buyIn) return { room, buyIn };
+    const roomId = this.roomIdByBuyInId.get(buyInId);
+    const room = roomId ? this.rooms.get(roomId) : undefined;
+    const buyIn = room?.buyIns.find((candidate) => candidate.id === buyInId);
+    if (!room || !buyIn) {
+      throw new NotFoundException({ code: "BUY_IN_NOT_FOUND", message: "Buy-In was not found." });
     }
-    throw new NotFoundException({ code: "BUY_IN_NOT_FOUND", message: "Buy-In was not found." });
+    return { room, buyIn };
   }
 
   private requireSeatOffer(seatOfferId: string): { room: RoomRecord; offer: SeatOfferDto } {
-    for (const room of this.rooms.values()) {
-      const offer = room.seatOffers.find((candidate) => candidate.id === seatOfferId);
-      if (offer) return { room, offer };
+    const roomId = this.roomIdBySeatOfferId.get(seatOfferId);
+    const room = roomId ? this.rooms.get(roomId) : undefined;
+    const offer = room?.seatOffers.find((candidate) => candidate.id === seatOfferId);
+    if (!room || !offer) {
+      throw new NotFoundException({ code: "SEAT_OFFER_NOT_FOUND", message: "Seat Offer was not found." });
     }
-    throw new NotFoundException({ code: "SEAT_OFFER_NOT_FOUND", message: "Seat Offer was not found." });
+    return { room, offer };
   }
 
   private requireRoom(roomId: string): RoomRecord {
@@ -221,6 +236,9 @@ export class LobbyStore {
 
   private commit<T>(result: CommandResult<T>): T {
     for (const event of result.events) {
+      if (event.type === "seatOffer.created") {
+        this.roomIdBySeatOfferId.set(event.seatOfferId, event.roomId);
+      }
       this.realtime.emit(event);
     }
     return result.value;

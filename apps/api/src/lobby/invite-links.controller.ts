@@ -1,5 +1,9 @@
 import { Controller, Get, Headers, Inject, Param, Post } from "@nestjs/common";
-import type { RoomResponse } from "@cryptopoker/contracts";
+import {
+  inviteLinkJoinPath,
+  inviteLinkPath,
+  type RoomResponse,
+} from "@cryptopoker/contracts";
 import { SessionStore } from "../sessions/session.store.js";
 import { currentPlayerFromCookie } from "../sessions/current-player.js";
 import { LobbyStore } from "./lobby.store.js";
@@ -13,12 +17,12 @@ export class InviteLinksController {
     private readonly lobby: LobbyStore,
   ) {}
 
-  @Get("/invite-links/:inviteCode")
+  @Get(inviteLinkPath(":inviteCode"))
   previewInvite(@Param("inviteCode") inviteCode: string): RoomResponse {
     return { room: this.lobby.previewInvite(inviteCode) };
   }
 
-  @Post("/invite-links/:inviteCode/join")
+  @Post(inviteLinkJoinPath(":inviteCode"))
   joinInvite(@Headers("cookie") cookieHeader: string | undefined, @Param("inviteCode") inviteCode: string): RoomResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.joinInvite(player, inviteCode) };

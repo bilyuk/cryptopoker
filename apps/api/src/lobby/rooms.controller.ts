@@ -2,6 +2,8 @@ import { Body, Controller, Get, Headers, Inject, Param, Patch, Post } from "@nes
 import {
   CURRENT_ROOM_PATH,
   ROOMS_PATH,
+  roomSettingsPath,
+  rotateInvitePath,
   type CreateRoomRequest,
   type RoomResponse,
   type UpdateRoomSettingsRequest,
@@ -31,7 +33,7 @@ export class RoomsController {
     return { room: this.lobby.currentRoom(player) };
   }
 
-  @Patch("/rooms/:roomId/settings")
+  @Patch(roomSettingsPath(":roomId"))
   updateSettings(
     @Headers("cookie") cookieHeader: string | undefined,
     @Param("roomId") roomId: string,
@@ -41,7 +43,7 @@ export class RoomsController {
     return { room: this.lobby.updateSettings(player, roomId, body) };
   }
 
-  @Post("/rooms/:roomId/rotate-invite")
+  @Post(rotateInvitePath(":roomId"))
   rotateInvite(@Headers("cookie") cookieHeader: string | undefined, @Param("roomId") roomId: string): RoomResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.rotateInvite(player, roomId) };

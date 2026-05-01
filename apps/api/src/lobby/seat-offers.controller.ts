@@ -1,5 +1,11 @@
 import { Controller, Headers, Inject, Param, Post } from "@nestjs/common";
-import type { RoomResponse, SeatOfferResponse } from "@cryptopoker/contracts";
+import {
+  seatOfferAcceptPath,
+  seatOfferDeclinePath,
+  seatOfferExpirePath,
+  type RoomResponse,
+  type SeatOfferResponse,
+} from "@cryptopoker/contracts";
 import { SessionStore } from "../sessions/session.store.js";
 import { currentPlayerFromCookie } from "../sessions/current-player.js";
 import { LobbyStore } from "./lobby.store.js";
@@ -13,19 +19,19 @@ export class SeatOffersController {
     private readonly lobby: LobbyStore,
   ) {}
 
-  @Post("/seat-offers/:seatOfferId/accept")
+  @Post(seatOfferAcceptPath(":seatOfferId"))
   acceptSeatOffer(@Headers("cookie") cookieHeader: string | undefined, @Param("seatOfferId") seatOfferId: string): RoomResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.acceptSeatOffer(player, seatOfferId) };
   }
 
-  @Post("/seat-offers/:seatOfferId/decline")
+  @Post(seatOfferDeclinePath(":seatOfferId"))
   declineSeatOffer(@Headers("cookie") cookieHeader: string | undefined, @Param("seatOfferId") seatOfferId: string): SeatOfferResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { seatOffer: this.lobby.declineSeatOffer(player, seatOfferId) };
   }
 
-  @Post("/seat-offers/:seatOfferId/expire")
+  @Post(seatOfferExpirePath(":seatOfferId"))
   expireSeatOffer(@Param("seatOfferId") seatOfferId: string): SeatOfferResponse {
     return { seatOffer: this.lobby.expireSeatOffer(seatOfferId) };
   }

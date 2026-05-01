@@ -3,14 +3,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import {
+  BUY_INS_PATH,
+  buyInApprovePath,
   CURRENT_PLAYER_PATH,
   CURRENT_PLAYER_SESSION_PATH,
   CURRENT_ROOM_PATH,
+  inviteLinkJoinPath,
+  inviteLinkPath,
   PLAYERS_PATH,
   REALTIME_EVENTS,
   ROOMS_PATH,
+  SEATS_CLAIM_PATH,
+  SEATS_LEAVE_PATH,
+  seatOfferAcceptPath,
+  seatOfferDeclinePath,
+  WAITLIST_JOIN_PATH,
+  WAITLIST_LEAVE_PATH,
   type CurrentPlayerResponse,
   type RoomResponse,
+  type RoomUpdatedPayload,
 } from "@cryptopoker/contracts";
 import { defaultRooms } from "@/components/aurum/data";
 import type { AppScreen, CreateRoomValues, Room } from "@/components/aurum/types";
@@ -71,7 +82,8 @@ export function useRoomClient() {
     };
   }, []);
 
-  const refetchRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const playerIdRef = useRef<string | undefined>(playerId);
+  playerIdRef.current = playerId;
   const selectedServerRoomId = selectedRoom.inviteCode ? selectedRoom.id : undefined;
 
   useEffect(() => {
@@ -81,8 +93,9 @@ export function useRoomClient() {
     socket.on("connect", () => {
       socket.emit("room.subscribe", { roomId: selectedServerRoomId });
     });
-    socket.on(REALTIME_EVENTS.roomUpdated, () => {
-      void refetchRef.current();
+    socket.on(REALTIME_EVENTS.roomUpdated, (payload: RoomUpdatedPayload) => {
+      const nextRoom = toUiRoomForPlayer(payload.room, playerIdRef.current);
+      setRooms((current) => current.map((item) => (item.id === nextRoom.id ? nextRoom : item)));
     });
 
     return () => {
@@ -150,7 +163,7 @@ export function useRoomClient() {
       return;
     }
 
-    const response = await apiFetch(`/invite-links/${selectedRoom.inviteCode}/join`, { method: "POST" });
+    const response = await apiFetch(inviteLinkJoinPath(selectedRoom.inviteCode), { method: "POST" });
     if (!response.ok) {
       setInviteJoinError("You cannot join that Room from this browser right now.");
       return;
@@ -171,7 +184,7 @@ export function useRoomClient() {
       return;
     }
 
-    const response = await apiFetch(`/invite-links/${inviteCode}`);
+    const response = await apiFetch(inviteLinkPath(inviteCode));
     if (!response.ok) {
       setInviteJoinError("That Invite Link is invalid or expired.");
       return;
@@ -227,36 +240,23 @@ export function useRoomClient() {
   }
 
   async function runRoomCommand(path: string, body?: unknown) {
-    const response = await apiFetch(path, {
+    if (!selectedRoom.inviteCode) return;
+    await apiFetch(path, {
       method: "POST",
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
-    if (response.ok) {
-      await refetchCurrentRoom();
-    }
   }
 
   const requestBuyIn = () =>
-    runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue });
-  const approveBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/approve`);
+    runRoomCommand(BUY_INS_PATH, { roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue });
+  const approveBuyIn = (buyInId: string) => runRoomCommand(buyInApprovePath(buyInId));
   const claimSeat = (seatNumber: number) =>
-    runRoomCommand("/seats/claim", { roomId: selectedRoom.id, seatNumber });
-  const leaveSeat = () => runRoomCommand("/seats/leave", { roomId: selectedRoom.id });
-  const joinWaitlist = () => runRoomCommand("/waitlist/join", { roomId: selectedRoom.id });
-  const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
-  const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
-  const declineSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/decline`);
-
-  async function refetchCurrentRoom() {
-    const response = await apiFetch(CURRENT_ROOM_PATH);
-    if (!response.ok) return;
-
-    const { room } = (await response.json()) as RoomResponse;
-    const nextRoom = toUiRoomForPlayer(room, playerId);
-    setRooms((current) => current.map((item) => (item.id === nextRoom.id ? nextRoom : item)));
-  }
-
-  refetchRef.current = refetchCurrentRoom;
+    runRoomCommand(SEATS_CLAIM_PATH, { roomId: selectedRoom.id, seatNumber });
+  const leaveSeat = () => runRoomCommand(SEATS_LEAVE_PATH, { roomId: selectedRoom.id });
+  const joinWaitlist = () => runRoomCommand(WAITLIST_JOIN_PATH, { roomId: selectedRoom.id });
+  const leaveWaitlist = () => runRoomCommand(WAITLIST_LEAVE_PATH, { roomId: selectedRoom.id });
+  const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(seatOfferAcceptPath(seatOfferId));
+  const declineSeatOffer = (seatOfferId: string) => runRoomCommand(seatOfferDeclinePath(seatOfferId));
 
   return {
     acceptSeatOffer,

@@ -7,10 +7,17 @@ type SessionRecord = {
   playerId: string;
 };
 
+type PlayerForgottenListener = (playerId: string) => void;
+
 @Injectable()
 export class SessionStore {
   private readonly players = new Map<string, PlayerDto>();
   private readonly sessions = new Map<string, SessionRecord>();
+  private readonly playerForgottenListeners = new Set<PlayerForgottenListener>();
+
+  onPlayerForgotten(listener: PlayerForgottenListener): void {
+    this.playerForgottenListeners.add(listener);
+  }
 
   createGuestSession(displayName: string): { sessionId: string; player: PlayerDto } {
     const player: PlayerDto = {
@@ -45,7 +52,14 @@ export class SessionStore {
 
   deleteSession(sessionId: string | undefined): void {
     if (!sessionId) return;
+    const session = this.sessions.get(sessionId);
+    if (!session) return;
+
     this.sessions.delete(sessionId);
+    this.players.delete(session.playerId);
+    for (const listener of this.playerForgottenListeners) {
+      listener(session.playerId);
+    }
   }
 }
 

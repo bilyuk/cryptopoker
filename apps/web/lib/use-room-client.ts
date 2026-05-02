@@ -13,7 +13,7 @@ import type { AppScreen, CreateRoomValues, Room } from "@/components/aurum/types
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { readInviteCode } from "@/lib/invite-code";
 import { copyInviteLink, shareInviteLink } from "@/lib/invite-actions";
-import { toUiRoomForPlayer } from "@/lib/room-view";
+import { isCurrentPlayerInRoom, toUiRoomForPlayer } from "@/lib/room-view";
 
 export function useRoomClient() {
   const [screen, setScreen] = useState<AppScreen>("welcome");
@@ -69,14 +69,19 @@ export function useRoomClient() {
 
   const playerIdRef = useRef<string | undefined>(playerId);
   playerIdRef.current = playerId;
-  const selectedServerRoomId = selectedRoom.inviteCode ? selectedRoom.id : undefined;
+  // Subscribe only when the current Player is actually a member of the Room.
+  // During invite preview, the Room has an inviteCode and id but the Player
+  // isn't joined yet; subscribing then would fail with ROOM_ACCESS_REQUIRED
+  // and wouldn't auto-recover when the Player joins (deps wouldn't change).
+  const subscribableRoomId =
+    isCurrentPlayerInRoom(selectedRoom, playerId) && selectedRoom.inviteCode ? selectedRoom.id : undefined;
 
   useEffect(() => {
-    if (!selectedServerRoomId) return;
+    if (!subscribableRoomId) return;
 
     const socket = io(API_BASE_URL, { withCredentials: true, transports: ["websocket"] });
     socket.on("connect", () => {
-      socket.emit("room.subscribe", { roomId: selectedServerRoomId });
+      socket.emit("room.subscribe", { roomId: subscribableRoomId });
     });
     socket.on(REALTIME_EVENTS.roomUpdated, (payload: RoomUpdatedPayload) => {
       const nextRoom = toUiRoomForPlayer(payload.room, playerIdRef.current);
@@ -86,7 +91,7 @@ export function useRoomClient() {
     return () => {
       socket.disconnect();
     };
-  }, [selectedServerRoomId]);
+  }, [subscribableRoomId]);
 
   async function enterLobby(name: string) {
     setSessionBusy(true);

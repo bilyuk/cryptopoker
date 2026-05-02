@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RoomDto } from "@cryptopoker/contracts";
-import { toUiRoomForPlayer } from "./room-view";
+import { isCurrentPlayerInRoom, toUiRoomForPlayer } from "./room-view";
 
 const emptyRoom: RoomDto = {
   id: "room-1",
@@ -100,6 +100,31 @@ describe("Room view model", () => {
       { id: "buy-in-1", playerId: "guest-1", displayName: "guest_tester", amount: "$40.00" },
     ]);
     expect(room.seatRoster.every((entry) => entry.playerId === null)).toBe(true);
+  });
+
+  it("isCurrentPlayerInRoom returns false for invite preview (Player not in players list yet)", () => {
+    // Preview path: server returns RoomDto without adding the Player to joinedPlayerIds.
+    // FE Room.players therefore does not include the previewing Player. Subscribing the
+    // WS at this moment would fail with ROOM_ACCESS_REQUIRED and never recover.
+    const room = toUiRoomForPlayer(emptyRoom);
+    expect(isCurrentPlayerInRoom(room, "guest-not-joined")).toBe(false);
+  });
+
+  it("isCurrentPlayerInRoom returns true once the Player has joined", () => {
+    const room = toUiRoomForPlayer({
+      ...emptyRoom,
+      players: [
+        { playerId: "host-1", displayName: "codex_tester", role: "host" },
+        { playerId: "guest-1", displayName: "guest_tester", role: "player" },
+      ],
+    });
+    expect(isCurrentPlayerInRoom(room, "guest-1")).toBe(true);
+    expect(isCurrentPlayerInRoom(room, "host-1")).toBe(true);
+  });
+
+  it("isCurrentPlayerInRoom returns false without a playerId", () => {
+    const room = toUiRoomForPlayer(emptyRoom);
+    expect(isCurrentPlayerInRoom(room, undefined)).toBe(false);
   });
 
   it("exposes the current Player's Waitlist position, Seat Offer, and waitlist roster", () => {

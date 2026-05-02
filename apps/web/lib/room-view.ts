@@ -86,6 +86,11 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
   };
 }
 
+export function isCurrentPlayerInRoom(room: Room, playerId: string | undefined): boolean {
+  if (!playerId) return false;
+  return room.players.some((player) => player.playerId === playerId);
+}
+
 function bestBuyInForPlayer(room: RoomDto, playerId: PlayerDto["id"]) {
   const playerBuyIns = room.buyIns.filter((buyIn) => buyIn.playerId === playerId);
   return (

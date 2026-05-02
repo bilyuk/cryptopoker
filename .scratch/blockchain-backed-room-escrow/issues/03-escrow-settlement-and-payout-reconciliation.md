@@ -65,3 +65,21 @@ QA re-wake inputs:
 - Branch/PR with executable implementation: `plan/cry-120-blockchain-room-escrow` / https://github.com/bilyuk/cryptopoker/pull/10
 - Authoritative validation commands for settlement/reconciliation: commands listed above
 - Operator tooling path for payout retry + reconciliation review: API endpoints in `apps/api/src/escrow/escrow.controller.ts` (`POST /escrow/transfers/fail`, `POST /escrow/transfers/finalize`, `GET /escrow/:roomId/ledger`, `POST /escrow/rooms/:roomId/reconcile-closeout`)
+
+### 2026-05-02T07:55:13Z — Engineer continuation update
+
+https://github.com/bilyuk/cryptopoker/pull/10
+
+No new blocker comments were posted on this issue. Keeping execution moving by requesting QA review now against the live implementation in PR #10.
+
+QA request:
+- Please run the CRY-127 settlement/reconciliation validation set:
+  - `pnpm --filter @cryptopoker/contracts build`
+  - `pnpm --filter @cryptopoker/contracts typecheck`
+  - `pnpm --filter @cryptopoker/api typecheck`
+  - `pnpm --filter @cryptopoker/api test`
+- Please validate operator recovery flows using:
+  - `POST /escrow/transfers/fail`
+  - `POST /escrow/transfers/finalize`
+  - `GET /escrow/:roomId/ledger`
+  - `POST /escrow/rooms/:roomId/reconcile-closeout`

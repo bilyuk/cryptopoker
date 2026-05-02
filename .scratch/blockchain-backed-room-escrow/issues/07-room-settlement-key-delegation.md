@@ -23,3 +23,4 @@ Let a Room Host delegate a scoped **Room Settlement Key** for one **Blockchain-B
 ## Blocked by
 
 - [04 - Lock-Before-Seat Escrow Seating](04-lock-before-seat-escrow-seating.md)
+- 2026-05-02 (follow-up): Requesting QA/human review on https://github.com/bilyuk/cryptopoker/pull/11 for CRY-131 scope. Delegation register/revoke/authorize paths and invalid signer/domain/scope tests are in place; API tests pass locally via `pnpm --filter @cryptopoker/api test`.

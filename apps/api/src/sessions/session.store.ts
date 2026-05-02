@@ -23,6 +23,7 @@ export class SessionStore {
     const player: PlayerDto = {
       id: randomUUID(),
       displayName: normalizeDisplayName(displayName),
+      walletAddress: null,
     };
     const sessionId = randomUUID();
 
@@ -46,6 +47,15 @@ export class SessionStore {
     if (!player) return undefined;
 
     const updated = { ...player, displayName: normalizeDisplayName(displayName) };
+    this.players.set(updated.id, updated);
+    return updated;
+  }
+
+  linkWallet(sessionId: string | undefined, walletAddress: string): PlayerDto | undefined {
+    const player = this.findPlayerBySession(sessionId);
+    if (!player) return undefined;
+
+    const updated = { ...player, walletAddress };
     this.players.set(updated.id, updated);
     return updated;
   }

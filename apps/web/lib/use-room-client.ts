@@ -239,8 +239,8 @@ export function useRoomClient() {
 
   const requestBuyIn = (amount: number) =>
     runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount });
-  const approveBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/approve`);
-  const rejectBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/reject`);
+  const expireBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/expire`);
+  const refundBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/refund`);
   const leaveSeat = () => runRoomCommand("/seats/leave", { roomId: selectedRoom.id });
   const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
   const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
@@ -248,8 +248,8 @@ export function useRoomClient() {
 
   return {
     acceptSeatOffer,
-    approveBuyIn,
-    rejectBuyIn,
+    expireBuyIn,
+    refundBuyIn,
     createRoom,
     declineSeatOffer,
     copyInvite,

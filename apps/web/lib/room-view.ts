@@ -60,7 +60,7 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
       };
     }),
     pendingBuyIns: room.buyIns
-      .filter((buyIn) => buyIn.status === "pending")
+      .filter((buyIn) => buyIn.status === "funding-pending")
       .map((buyIn): RoomBuyInSummary => {
         const player = room.players.find((candidate) => candidate.playerId === buyIn.playerId);
         return {
@@ -94,8 +94,11 @@ export function isCurrentPlayerInRoom(room: Room, playerId: string | undefined):
 function bestBuyInForPlayer(room: RoomDto, playerId: PlayerDto["id"]) {
   const playerBuyIns = room.buyIns.filter((buyIn) => buyIn.playerId === playerId);
   return (
-    playerBuyIns.find((buyIn) => buyIn.status === "host-verified") ??
-    playerBuyIns.find((buyIn) => buyIn.status === "pending") ??
-    playerBuyIns.find((buyIn) => buyIn.status === "rejected")
+    playerBuyIns.find((buyIn) => buyIn.status === "in-play") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "escrow-funded") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "funding-pending") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "refund-pending") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "refunded") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "expired")
   );
 }

@@ -9,8 +9,8 @@ type RoomScreenProps = {
   room: Room;
   onBackToLobby: () => void;
   onDeal: () => void;
-  onApproveBuyIn: (buyInId: string) => void;
-  onRejectBuyIn: (buyInId: string) => void;
+  onExpireBuyIn: (buyInId: string) => void;
+  onRefundBuyIn: (buyInId: string) => void;
   onLeaveSeat: () => void;
   onInvitePreview: () => void;
   onCopyInvite: () => void;
@@ -30,7 +30,7 @@ export function RoomScreen(props: RoomScreenProps) {
   const isSeated = currentPlayer?.seated ?? false;
   const status = currentPlayer?.buyInStatus ?? "none";
 
-  if (!isSeated && status !== "host-verified") {
+  if (!isSeated && status !== "escrow-funded" && status !== "in-play") {
     return (
       <UnverifiedFoyer
         playerName={props.playerName}
@@ -44,7 +44,7 @@ export function RoomScreen(props: RoomScreenProps) {
     );
   }
 
-  if (!isSeated && status === "host-verified") {
+  if (!isSeated && (status === "escrow-funded" || status === "in-play")) {
     const position = room.currentPlayerWaitlistPosition ?? 1;
     return (
       <WaitlistFoyer
@@ -67,8 +67,8 @@ export function RoomScreen(props: RoomScreenProps) {
       room={room}
       isHost={isHost}
       isSeated={isSeated}
-      onApproveBuyIn={props.onApproveBuyIn}
-      onRejectBuyIn={props.onRejectBuyIn}
+      onExpireBuyIn={props.onExpireBuyIn}
+      onRefundBuyIn={props.onRefundBuyIn}
       onLeaveSeat={props.onLeaveSeat}
       onLeaveRoom={props.onBackToLobby}
       onDeal={props.onDeal}

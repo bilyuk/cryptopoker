@@ -21,7 +21,14 @@ export type BuyInDto = {
   roomId: string;
   playerId: string;
   amount: number;
-  status: "pending" | "host-verified" | "rejected";
+  status: "funding-pending" | "escrow-funded" | "in-play" | "refund-pending" | "refunded" | "expired";
+  network: "base";
+  stablecoin: "USDC";
+  fundingAddress: string;
+  fundingReference: string;
+  expiresAt: string;
+  fundedAt: string | null;
+  refundedAt: string | null;
 };
 
 export type WaitlistEntryDto = {
@@ -75,6 +82,20 @@ export type SeatOfferResponse = {
 export type RequestBuyInRequest = {
   roomId: string;
   amount: number;
+};
+
+export type EscrowDepositEventRequest = {
+  eventId: string;
+  fundingReference: string;
+  txHash: string;
+  blockNumber: number;
+};
+
+export type EscrowRefundEventRequest = {
+  eventId: string;
+  buyInId: string;
+  txHash: string;
+  blockNumber: number;
 };
 
 export type RoomCommandRequest = {

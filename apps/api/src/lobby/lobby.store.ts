@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { BuyInDto, PlayerDto, RoomDto, RoomSettingsDto, SeatOfferDto } from "@cryptopoker/contracts";
+import { ESCROW_NETWORK, ESCROW_STABLECOIN } from "../escrow/escrow.types.js";
 import { SessionStore } from "../sessions/session.store.js";
 import { commandResult, type CommandResult } from "./command-events.js";
 import { RealtimeService } from "./realtime.service.js";
@@ -14,6 +15,8 @@ export class LobbyStore {
   private readonly activeRoomIdByPlayerId = new Map<string, string>();
   private readonly roomIdByBuyInId = new Map<string, string>();
   private readonly roomIdBySeatOfferId = new Map<string, string>();
+  private readonly processedEscrowEvents = new Set<string>();
+  private readonly processedEscrowTransactions = new Set<string>();
 
   constructor(
     @Inject(RealtimeService) private readonly realtime: RealtimeService,
@@ -31,7 +34,14 @@ export class LobbyStore {
       roomId: "",
       playerId: host.id,
       amount: normalized.buyInMin,
-      status: "host-verified",
+      status: "in-play",
+      network: ESCROW_NETWORK,
+      stablecoin: ESCROW_STABLECOIN,
+      fundingAddress: createFundingAddress(),
+      fundingReference: randomUUID(),
+      expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+      fundedAt: new Date().toISOString(),
+      refundedAt: null,
     };
     const room: RoomRecord = {
       id: randomUUID(),
@@ -140,29 +150,50 @@ export class LobbyStore {
     if (amount < room.settings.buyInMin || amount > room.settings.buyInMax) {
       throw new BadRequestException({ code: "BUY_IN_OUT_OF_RANGE", message: "Buy-In amount must be within the Room's allowed range." });
     }
-    if (room.buyIns.some((existing) => existing.playerId === player.id && existing.status === "pending")) {
-      throw new BadRequestException({ code: "BUY_IN_PENDING", message: "A pending Buy-In already exists for this Player in this Room." });
+    if (!player.walletAddress) {
+      throw new BadRequestException({ code: "WALLET_REQUIRED", message: "Link or provision a wallet before requesting escrow funding." });
+    }
+    if (room.buyIns.some((existing) => existing.playerId === player.id && existing.status === "funding-pending")) {
+      throw new BadRequestException({ code: "BUY_IN_PENDING", message: "A funding-pending Buy-In already exists for this Player in this Room." });
     }
 
+    const now = Date.now();
     const buyIn: BuyInDto = {
       id: randomUUID(),
       roomId,
       playerId: player.id,
       amount,
-      status: "pending",
+      status: "funding-pending",
+      network: ESCROW_NETWORK,
+      stablecoin: ESCROW_STABLECOIN,
+      fundingAddress: createFundingAddress(),
+      fundingReference: randomUUID(),
+      expiresAt: new Date(now + 15 * 60_000).toISOString(),
+      fundedAt: null,
+      refundedAt: null,
     };
     room.buyIns.push(buyIn);
     this.roomIdByBuyInId.set(buyIn.id, room.id);
     return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
   }
 
-  approveBuyIn(actor: PlayerDto, buyInId: string): BuyInDto {
-    const { room, buyIn } = this.requireBuyIn(buyInId);
-    this.assertHost(actor, room);
-    if (buyIn.status !== "pending") {
-      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only a pending Buy-In can be approved." });
+  confirmEscrowDeposit(eventId: string, fundingReference: string, txHash: string): BuyInDto {
+    if (this.processedEscrowEvents.has(eventId) || this.processedEscrowTransactions.has(txHash)) {
+      const { buyIn } = this.requireBuyInByFundingReference(fundingReference);
+      return { ...buyIn };
     }
-    buyIn.status = "host-verified";
+    const { room, buyIn } = this.requireBuyInByFundingReference(fundingReference);
+    if (buyIn.status !== "funding-pending") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only funding-pending Buy-Ins can be confirmed." });
+    }
+    if (Date.now() > Date.parse(buyIn.expiresAt)) {
+      buyIn.status = "expired";
+      throw new BadRequestException({ code: "FUNDING_INTENT_EXPIRED", message: "Funding intent has expired for this Buy-In." });
+    }
+    buyIn.status = "escrow-funded";
+    buyIn.fundedAt = new Date().toISOString();
+    this.processedEscrowEvents.add(eventId);
+    this.processedEscrowTransactions.add(txHash);
 
     const buyInPlayer = this.roomPlayerDto(room, buyIn.playerId);
     const seatNumber = lowestOpenSeatWithoutPendingOffer(room);
@@ -173,13 +204,45 @@ export class LobbyStore {
     return this.commit(commandResult({ ...buyIn }, seatingResult.events));
   }
 
-  rejectBuyIn(actor: PlayerDto, buyInId: string): BuyInDto {
+  markBuyInExpired(buyInId: string): BuyInDto {
     const { room, buyIn } = this.requireBuyIn(buyInId);
-    this.assertHost(actor, room);
-    if (buyIn.status !== "pending") {
-      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only a pending Buy-In can be rejected." });
+    if (buyIn.status !== "funding-pending") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only a funding-pending Buy-In can expire." });
     }
-    buyIn.status = "rejected";
+    buyIn.status = "expired";
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+  }
+
+  requestPrePlayRefund(actor: PlayerDto, buyInId: string): BuyInDto {
+    const { room, buyIn } = this.requireBuyIn(buyInId);
+    if (actor.id !== buyIn.playerId && actor.id !== room.hostPlayerId) {
+      throw new ForbiddenException({ code: "BUY_IN_REFUND_FORBIDDEN", message: "Only the Player or Room Host can request this refund." });
+    }
+    if (room.hasStarted) {
+      throw new BadRequestException({ code: "LIVE_PLAY_REFUND_FORBIDDEN", message: "Pre-play refunds are only available before live play starts." });
+    }
+    if (buyIn.status !== "funding-pending" && buyIn.status !== "escrow-funded" && buyIn.status !== "expired") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Buy-In cannot enter refund flow from its current state." });
+    }
+    buyIn.status = "refund-pending";
+    removePlayerFromSeatAndWaitlist(room, buyIn.playerId);
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+  }
+
+  confirmEscrowRefund(eventId: string, buyInId: string, txHash: string): BuyInDto {
+    if (this.processedEscrowEvents.has(eventId) || this.processedEscrowTransactions.has(txHash)) {
+      const { buyIn } = this.requireBuyIn(buyInId);
+      return { ...buyIn };
+    }
+
+    const { room, buyIn } = this.requireBuyIn(buyInId);
+    if (buyIn.status !== "refund-pending") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only refund-pending Buy-Ins can be refunded." });
+    }
+    buyIn.status = "refunded";
+    buyIn.refundedAt = new Date().toISOString();
+    this.processedEscrowEvents.add(eventId);
+    this.processedEscrowTransactions.add(txHash);
     return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
   }
 
@@ -224,6 +287,14 @@ export class LobbyStore {
       throw new NotFoundException({ code: "BUY_IN_NOT_FOUND", message: "Buy-In was not found." });
     }
     return { room, buyIn };
+  }
+
+  private requireBuyInByFundingReference(fundingReference: string): { room: RoomRecord; buyIn: BuyInDto } {
+    for (const room of this.rooms.values()) {
+      const buyIn = room.buyIns.find((candidate) => candidate.fundingReference === fundingReference);
+      if (buyIn) return { room, buyIn };
+    }
+    throw new NotFoundException({ code: "BUY_IN_NOT_FOUND", message: "Buy-In funding reference was not found." });
   }
 
   private requireSeatOffer(seatOfferId: string): { room: RoomRecord; offer: SeatOfferDto } {
@@ -282,4 +353,23 @@ function lowestOpenSeatWithoutPendingOffer(room: RoomRecord): number | undefined
     if (!hasPendingOffer) return seat.seatNumber;
   }
   return undefined;
+}
+
+function createFundingAddress(): string {
+  const alphabet = "0123456789abcdef";
+  let value = "0x";
+  for (let i = 0; i < 40; i += 1) {
+    value += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return value;
+}
+
+function removePlayerFromSeatAndWaitlist(room: RoomRecord, playerId: string): void {
+  for (const seat of room.seats) {
+    if (seat.playerId === playerId) {
+      seat.playerId = null;
+      seat.tableStack = null;
+    }
+  }
+  room.waitlist = room.waitlist.filter((entry) => entry.playerId !== playerId).map((entry, index) => ({ ...entry, position: index + 1 }));
 }

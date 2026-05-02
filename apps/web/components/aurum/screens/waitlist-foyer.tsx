@@ -60,7 +60,7 @@ export function WaitlistFoyer({
           <Panel className="mt-7 p-5 md:p-6">
             <p className="font-display text-3xl text-ivory-50">You're {ordinal} on the waitlist.</p>
             <p className="mt-3 text-sm text-sapphire-200">
-              Buy-in verified. We'll seat you the moment a Seat opens.
+              Escrow funded. We'll seat you the moment a Seat opens.
             </p>
             <div className="mt-5">
               <AurumButton variant="ghost" onClick={onLeaveWaitlist}>

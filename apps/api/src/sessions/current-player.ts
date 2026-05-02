@@ -24,6 +24,14 @@ export class CurrentPlayer {
     }
     return player;
   }
+
+  linkWallet(walletAddress: string): PlayerDto {
+    const player = this.sessions.linkWallet(readSessionCookie(this.cookieHeader), walletAddress);
+    if (!player) {
+      throw new NotFoundException({ code: "PLAYER_SESSION_NOT_FOUND", message: "Create a guest session before linking a wallet." });
+    }
+    return player;
+  }
 }
 
 export function currentPlayerFromCookie(sessions: SessionStore, cookieHeader: string | undefined): CurrentPlayer {

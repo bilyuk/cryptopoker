@@ -33,8 +33,10 @@ export function UnverifiedFoyer({
   const [error, setError] = useState<string | undefined>();
 
   // Server-driven "pending" supersedes any local optimistic submitting state.
-  const showPending = status === "pending";
-  const showRejected = status === "rejected" && !submitting;
+  const showPending = status === "funding-pending";
+  const showRefundPending = status === "refund-pending";
+  const showRefunded = status === "refunded" && !submitting;
+  const showExpired = status === "expired" && !submitting;
   const showPicker = !showPending;
 
   async function handleRequest() {
@@ -63,12 +65,24 @@ export function UnverifiedFoyer({
         </p>
 
         <Panel className="mt-7 p-5 md:p-6">
-          {showRejected && (
+          {showExpired && (
             <div className="mb-5 rounded-md border border-champagne-500/45 bg-champagne-500/10 p-3">
-              <p className="aurum-eyebrow text-champagne-500">Buy-in not yet verified</p>
+              <p className="aurum-eyebrow text-champagne-500">Funding intent expired</p>
               <p className="mt-2 text-sm text-ivory-100">
-                Try again, or check with {room.hostName} about the amount.
+                Create a new funding intent to continue joining this Room.
               </p>
+            </div>
+          )}
+          {showRefundPending && (
+            <div className="mb-5 rounded-md border border-champagne-500/45 bg-champagne-500/10 p-3">
+              <p className="aurum-eyebrow text-champagne-500">Refund pending</p>
+              <p className="mt-2 text-sm text-ivory-100">Escrow is processing your refund before play starts.</p>
+            </div>
+          )}
+          {showRefunded && (
+            <div className="mb-5 rounded-md border border-champagne-500/45 bg-champagne-500/10 p-3">
+              <p className="aurum-eyebrow text-champagne-500">Refund complete</p>
+              <p className="mt-2 text-sm text-ivory-100">Funds were returned to your linked wallet.</p>
             </div>
           )}
 
@@ -79,10 +93,10 @@ export function UnverifiedFoyer({
                 <p className="aurum-eyebrow text-sapphire-400">Waiting</p>
               </div>
               <p className="font-display text-3xl text-ivory-50">
-                Waiting for {room.hostName} to verify your buy-in.
+                Waiting for escrow deposit confirmation.
               </p>
               <p className="text-sm text-sapphire-200">
-                You'll be seated automatically once verified.
+                You will be seated automatically after indexed chain confirmation.
               </p>
             </div>
           ) : (
@@ -99,10 +113,10 @@ export function UnverifiedFoyer({
                 disabled={submitting || amount < room.buyInRange.min || amount > room.buyInRange.max}
                 onClick={handleRequest}
               >
-                {submitting ? "Sending..." : `Request $${amount} buy-in`}
+                {submitting ? "Creating..." : `Fund $${amount} to escrow`}
               </AurumButton>
               <p className="text-xs text-sapphire-300">
-                {room.hostName} will verify, then you'll be seated automatically.
+                Base USDC funding intent; seating unlocks once escrow is funded.
               </p>
               {error && (
                 <p className="rounded-md border border-danger-400/45 bg-danger-400/10 px-3 py-2 text-xs text-ivory-100">

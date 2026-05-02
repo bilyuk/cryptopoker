@@ -86,3 +86,8 @@ No new implementation gaps remain for CRY-126 in this heartbeat. Branch `plan/cr
 https://github.com/bilyuk/cryptopoker/pull/10
 
 CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.
+
+### 2026-05-02 - Engineer update (continuation heartbeat)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Continuation heartbeat confirms no open engineering delta remains for CRY-126 on this branch. Escrow tracer contract/UI/backend evidence and status-normalization updates are already pushed; ticket is waiting on human/project state transition from `in_progress`.

@@ -41,3 +41,9 @@ https://github.com/bilyuk/cryptopoker/pull/11
 
 Re-checked PR status this heartbeat: `gh pr checks 11` still reports no CI checks on branch `feat/cry-139-compliance-no-rake`.
 Requesting unblock from repo maintainer/CI owner: please attach and run required checks for this PR branch so the ticket can be advanced to `in_review` per PR-driven DoD.
+
+### 2026-05-02 — Active branch PR update
+https://github.com/bilyuk/cryptopoker/pull/12
+
+Opened PR from the current claimed worktree branch `plan/cry-120-blockchain-room-escrow` to keep CRY-129 in PR-driven flow for this checkout context.
+Current blocker remains CI visibility: `gh pr checks 12` reports no checks on this branch, so the issue cannot advance to `in_review` until repository CI is attached/running.

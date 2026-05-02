@@ -28,18 +28,15 @@ export const Empty: Story = {
   },
 };
 
-export const LoginFormPanel: Story = {
+export const GuestEntryPanel: Story = {
   render: () => (
     <Panel className="w-full max-w-[660px] p-7">
-      <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-champagne-500/15 bg-sapphire-950/60 p-1.5">
-        <AurumButton active variant="segment">Play as Guest</AurumButton>
-        <AurumButton variant="segment">Sign In</AurumButton>
-      </div>
+      <p className="text-xs font-semibold uppercase tracking-[0.55em] text-champagne-500">Guest Player</p>
       <label className="mt-7 grid gap-2.5">
         <span className="text-sm font-semibold uppercase tracking-[0.3em] text-champagne-500">Display name</span>
         <input className="aurum-input" placeholder="pick anything - e.g. river_rat" />
       </label>
-      <p className="mt-4 text-sm text-sapphire-400">Guest names are not saved. Close the tab, take the name with you.</p>
+      <p className="mt-4 text-sm text-sapphire-400">This browser keeps your Player and Display Name for next time.</p>
       <AurumButton className="mt-6 w-full min-h-16">
         Take a Seat
         <ArrowRight size={16} />

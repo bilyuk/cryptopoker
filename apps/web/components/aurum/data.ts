@@ -4,6 +4,7 @@ export const logoUrl = "https://www.figma.com/api/mcp/asset/3904d8cc-02af-4b95-8
 
 const prototypeRoomDefaults = {
   hostPlayerId: "prototype-host",
+  hasStarted: false,
   hostName: "riverrat",
   buyInRange: { min: 40, max: 200 },
   players: [],

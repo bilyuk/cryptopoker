@@ -83,10 +83,11 @@ export default function Home() {
       )}
       {roomClient.screen === "invite" && (
         <InviteScreen
+          playerName={roomClient.playerName}
           hostName={roomClient.selectedRoom.hostName}
           room={roomClient.selectedRoom}
           onJoin={roomClient.joinInvite}
-          onSignIn={roomClient.signOut}
+          onUseDifferentPlayer={roomClient.signOut}
           onBack={() => roomClient.setScreen("lobby")}
           error={roomClient.inviteJoinError}
         />

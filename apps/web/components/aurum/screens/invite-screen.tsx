@@ -5,15 +5,24 @@ import { Panel } from "../panel";
 import type { Room } from "../types";
 
 type InviteScreenProps = {
+  playerName: string;
   hostName: string;
   room: Room;
   onJoin: () => void;
-  onSignIn: () => void;
+  onUseDifferentPlayer: () => void;
   onBack: () => void;
   error?: string;
 };
 
-export function InviteScreen({ hostName, room, onJoin, onSignIn, onBack, error }: InviteScreenProps) {
+export function InviteScreen({
+  playerName,
+  hostName,
+  room,
+  onJoin,
+  onUseDifferentPlayer,
+  onBack,
+  error,
+}: InviteScreenProps) {
   return (
     <main className="relative min-h-screen p-3 sm:grid sm:place-items-center sm:p-6">
       <header className="flex h-12 items-center justify-between rounded-[18px] border border-champagne-500/25 bg-sapphire-900/70 px-2 pl-2 shadow-[0_10px_24px_-10px_rgb(0_0_0_/_0.34)] backdrop-blur md:hidden">
@@ -51,8 +60,11 @@ export function InviteScreen({ hostName, room, onJoin, onSignIn, onBack, error }
           <ArrowRight size={15} />
         </AurumButton>
         {error && <p className="text-sm font-semibold text-rose-200">{error}</p>}
-        <AurumButton className="min-h-10" variant="ghost" onClick={onSignIn}>
-          Sign In to Join
+        <p className="text-sm text-sapphire-200">
+          Joining as <strong className="text-ivory-50">{playerName}</strong> on this browser.
+        </p>
+        <AurumButton className="min-h-10" variant="ghost" onClick={onUseDifferentPlayer}>
+          Use a Different Player
         </AurumButton>
         <small className="aurum-caption text-sapphire-200/70">This room is private. Only people with this link can join.</small>
       </Panel>

@@ -1,6 +1,6 @@
 # Wallet Funding and Escrow-Backed Room Entry
 
-Status: ready-for-agent
+Status: ready-for-human
 
 ## Parent
 
@@ -32,3 +32,25 @@ Replace Host approval as the gate for room participation with wallet-linked escr
 - `apps/web/components/aurum/screens/`
 - `packages/contracts/src/`
 
+
+## Comments
+
+### 2026-05-02 - Engineer update
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Implemented escrow-backed room entry on top of the CRY-125 foundation: wallet link/provision endpoint (`POST /players/current/wallet`), escrow funding intent fields on buy-ins, indexer-driven deposit/refund confirmation endpoints (`POST /escrow/events/deposits`, `POST /escrow/events/refunds`), pre-play expiry/refund transitions, and escrow-funded seating/waitlist gating (removed host approval as participation gate). Updated foyer/table UI copy and actions to escrow lifecycle states, and migrated integration tests to event-confirmed funding with duplicate-event idempotency and expired/refund entry coverage.
+
+Validation run:
+- `pnpm -w typecheck`
+- `pnpm -w test`
+
+QA re-wake payload requested in CRY-128:
+- Branch/PR with executable implementation: `plan/cry-120-blockchain-room-escrow`, https://github.com/bilyuk/cryptopoker/pull/10
+- Authoritative validation commands:
+  - `pnpm -w typecheck`
+  - `pnpm -w test`
+  - API-focused regression: `pnpm --filter @cryptopoker/api test`
+  - Browser room view mapping regression: `pnpm --filter @cryptopoker/web test`
+- Local chain / seeded-wallet prerequisites:
+  - No local chain required for this phase; escrow confirmations are modeled via indexed-event API endpoints.
+  - Wallet prerequisite for deterministic room funding is linking/provisioning per player session via `POST /players/current/wallet` before `POST /buy-ins`.

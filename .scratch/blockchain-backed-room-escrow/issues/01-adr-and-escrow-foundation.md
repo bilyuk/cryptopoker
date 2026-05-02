@@ -12,12 +12,12 @@ Supersede the Host-Verified Buy-In decision with a new ADR and lay the technical
 
 ## Acceptance criteria
 
-- [ ] A new ADR explicitly supersedes [ADR-0002](../../../docs/adr/0002-host-verified-buy-ins.md) and records the approved custody/network/stablecoin decision.
-- [ ] `CONTEXT.md` is updated so Buy-In and Room vocabulary no longer depends on Host verification once escrow is enabled.
-- [ ] Shared contracts add escrow-specific DTOs and state enums for funding, payout, refund, and reconciliation.
-- [ ] The API has a dedicated escrow module boundary and a durable ledger schema proposal, even if later phases implement the endpoints.
-- [ ] A contract workspace exists with deployment config, ABI generation, and automated test scaffolding.
-- [ ] The plan names the signer, key-management, and event-indexing approach that later phases will use.
+- [x] A new ADR explicitly supersedes [ADR-0002](../../../docs/adr/0002-host-verified-buy-ins.md) and records the approved custody/network/stablecoin decision.
+- [x] `CONTEXT.md` is updated so Buy-In and Room vocabulary no longer depends on Host verification once escrow is enabled.
+- [x] Shared contracts add escrow-specific DTOs and state enums for funding, payout, refund, and reconciliation.
+- [x] The API has a dedicated escrow module boundary and a durable ledger schema proposal, even if later phases implement the endpoints.
+- [x] A contract workspace exists with deployment config, ABI generation, and automated test scaffolding.
+- [x] The plan names the signer, key-management, and event-indexing approach that later phases will use.
 
 ## Relevant files
 
@@ -39,3 +39,14 @@ Validation run:
 - `pnpm -w test`
 
 CI status: no required checks reported on this branch at PR creation time.
+
+### 2026-05-02 - Engineer update (post-resync)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Acknowledged CRY-141 resync guidance and treated `.scratch/blockchain-backed-room-escrow/issues/01-adr-and-escrow-foundation.md` as the source-of-truth brief. Verified this branch already contains the requested foundation scope (ADR supersession, CONTEXT escrow vocabulary updates, shared escrow DTO/state additions, API escrow module boundary + ledger schema proposal, and contract workspace scaffolding). Acceptance checklist is now marked complete in this issue file.
+
+Current validation state (latest run on this branch):
+- `pnpm -w typecheck`
+- `pnpm -w test`
+
+PR remains open for review; no required CI checks are currently reported for this branch.

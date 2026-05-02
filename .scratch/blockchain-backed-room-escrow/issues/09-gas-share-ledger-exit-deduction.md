@@ -24,3 +24,12 @@ Track backend-relayed Room transaction costs as **Gas Shares**, split them equal
 ## Blocked by
 
 - [08 - Host-Arbitrated Checkout and Receipts](08-host-arbitrated-checkout-receipts.md)
+
+### 2026-05-02 Engineer continuation update
+https://github.com/bilyuk/cryptopoker/pull/11
+
+Followed up unblock request: posted on the PR for repository maintainer + QA. Blocking condition remains unchanged: no CI checks are reported for this branch, so required `in_review` transition with green CI cannot be completed yet.
+
+Requested actions:
+- QA owner: run manual verification for checkout/refund/payout gas-share deduction behavior on this PR head.
+- Repo maintainer owner: enable/attach required CI checks to this branch so the ticket can advance.

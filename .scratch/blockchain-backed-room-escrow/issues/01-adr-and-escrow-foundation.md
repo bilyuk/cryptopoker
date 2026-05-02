@@ -50,3 +50,15 @@ Current validation state (latest run on this branch):
 - `pnpm -w test`
 
 PR remains open for review; no required CI checks are currently reported for this branch.
+
+### 2026-05-02 - Engineer update (continuation)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Continuation heartbeat completed. Normalized PR metadata to match CRY-125 foundation scope and reconfirmed issue status remains `in_review` with all acceptance criteria checked in the local tracker. This ticket is now waiting on reviewer approval.
+
+Validation reference:
+- `pnpm -w typecheck`
+- `pnpm -w test`
+
+CI/checks reference:
+- `gh pr checks 10` currently reports no required checks on this branch.

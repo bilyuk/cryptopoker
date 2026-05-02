@@ -1,6 +1,6 @@
 # Solvency Replay and Monitoring
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -25,3 +25,10 @@ Build the operational monitoring path for escrow correctness: event replay, **Ro
 - [02 - Base Sepolia Escrow Funding Tracer](02-base-sepolia-escrow-funding-tracer.md)
 - [08 - Host-Arbitrated Checkout and Receipts](08-host-arbitrated-checkout-receipts.md)
 - [12 - Settlement Frozen, Pause, and Emergency Exit](12-settlement-frozen-pause-emergency-exit.md)
+
+## Comments
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

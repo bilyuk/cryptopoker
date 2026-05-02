@@ -1,6 +1,6 @@
 # Anti-Ratholing Rejoin Policy
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -24,3 +24,10 @@ Enforce default-on, Host-configurable **Anti-Ratholing** when a checked-out Play
 ## Blocked by
 
 - [08 - Host-Arbitrated Checkout and Receipts](08-host-arbitrated-checkout-receipts.md)
+
+## Comments
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

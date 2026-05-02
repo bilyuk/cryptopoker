@@ -34,3 +34,4 @@ Category: bug
 - 2026-05-01 (agent): Added `@types/react` and `@types/react-dom` to `@cryptopoker/web` devDependencies, reran `pnpm typecheck` successfully, pushed branch `cry-111-dev-setup-docs`, and opened PR: https://github.com/bilyuk/cryptopoker/pull/5
 - 2026-05-01 (agent): Requesting human QA/reviewer to validate PR https://github.com/bilyuk/cryptopoker/pull/5 and merge if approved.
 - 2026-05-01 (agent): Addressed comment "fix merge conflicts" by rebasing branch `cry-111-dev-setup-docs` onto `origin/main`, resolving tracker-file conflicts, rerunning `pnpm typecheck` (pass), and force-pushing updated branch to refresh PR #5.
+- 2026-05-01 (agent): Continuation heartbeat: no new technical changes needed; PR #5 remains conflict-free after rebase with passing `pnpm typecheck`, pending human review/merge.

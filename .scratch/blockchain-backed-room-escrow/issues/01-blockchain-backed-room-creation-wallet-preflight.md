@@ -39,3 +39,13 @@ Key test coverage added/updated:
 - API Room creation defaults + blockchain policy assertions
 - Wallet preflight states: `wallet-required`, `wrong-chain`, `unsupported-token`, `ready`
 - Host-verified room creation regression guard
+
+### 2026-05-02 - Engineer update (continuation)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Continuation heartbeat: implementation remains complete for CRY-125 scope and local issue status stays `in_review`. Reconfirmed PR is open and branch is review-ready.
+
+Latest checks reference:
+- `pnpm -w typecheck` (last run: pass)
+- `pnpm -w test` (last run: pass)
+- `gh pr checks 10` currently reports no required checks on this branch.

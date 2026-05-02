@@ -58,3 +58,94 @@ export type EscrowReconciliationRecordDto = {
   state: EscrowReconciliationState;
   observedAt: string;
 };
+
+export type EscrowLedgerEntryType = "funding" | "allocation" | "settlement" | "payout" | "refund" | "reconciliation";
+export type EscrowLedgerReferenceType = "funding-intent" | "deposit" | "hand" | "payout" | "refund" | "replay";
+
+export type EscrowPlayerLedgerBalanceDto = {
+  roomId: string;
+  playerId: string;
+  startingBalance: number;
+  inPlayAllocation: number;
+  settlementDelta: number;
+  withdrawableBalance: number;
+};
+
+export type EscrowLedgerEntryDto = {
+  id: string;
+  roomId: string;
+  playerId: string;
+  entryType: EscrowLedgerEntryType;
+  referenceType: EscrowLedgerReferenceType;
+  referenceId: string;
+  amountDelta: number;
+  roomLiabilityAfter: number;
+  status: "pending" | "confirmed" | "failed";
+  chainTxHash: string | null;
+  chainBlockNumber: number | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type EscrowSettlementPlayerDelta = {
+  playerId: string;
+  delta: number;
+};
+
+export type RecordHandSettlementRequest = {
+  roomId: string;
+  handId: string;
+  deltas: EscrowSettlementPlayerDelta[];
+};
+
+export type QueueEscrowTransferRequest = {
+  roomId: string;
+  playerId: string;
+  amount: number;
+  idempotencyKey: string;
+  payoutAddress?: string;
+  refundAddress?: string;
+};
+
+export type EscrowTransferQueueRecordDto = {
+  id: string;
+  roomId: string;
+  playerId: string;
+  amount: number;
+  transferType: "payout" | "refund";
+  state: "queued" | "processing" | "paid" | "failed";
+  idempotencyKey: string;
+  referenceId: string;
+  destinationAddress: string;
+  failureReason: string | null;
+  queuedAt: string;
+  settledAt: string | null;
+};
+
+export type FinalizeEscrowTransferRequest = {
+  transferId: string;
+  eventId: string;
+  txHash: string;
+  blockNumber: number;
+};
+
+export type FailEscrowTransferRequest = {
+  transferId: string;
+  reason: string;
+};
+
+export type RoomCloseoutReconciliationRequest = {
+  roomId: string;
+  onchainBalanceByPlayer: Record<string, number>;
+};
+
+export type RoomCloseoutReconciliationResultDto = {
+  roomId: string;
+  reconciled: boolean;
+  mismatches: Array<{
+    playerId: string;
+    offchainWithdrawable: number;
+    onchainBalance: number;
+    delta: number;
+  }>;
+};

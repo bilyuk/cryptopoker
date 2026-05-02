@@ -1,6 +1,6 @@
 # Escrow Settlement and Payout Reconciliation
 
-Status: ready-for-agent
+Status: in_progress
 
 ## Parent
 
@@ -30,3 +30,21 @@ Settle escrow-backed balances from authoritative poker outcomes and release payo
 - `packages/contracts/src/`
 - `docs/adr/`
 
+## Comments
+
+### 2026-05-02T07:49:32Z — Engineer update
+
+Acknowledged QA's dependency note from `CRY-128`: this ticket needed executable escrow settlement/reconciliation code before QA could validate.
+
+Implemented `CRY-127` scope on this branch:
+- Added escrow settlement and reconciliation contract DTOs in `packages/contracts/src/escrow.ts`.
+- Extended escrow API with hand-settlement persistence, payout/refund queueing, replay-safe transfer finalization, transfer failure handling, ledger/balance reads, and room closeout reconciliation.
+- Added escrow integration tests for idempotent hand settlement, replay-safe queue/finalize behavior, partial transfer failure handling, and reconciliation mismatch detection.
+
+Validation run:
+- `pnpm --filter @cryptopoker/contracts build`
+- `pnpm --filter @cryptopoker/contracts typecheck`
+- `pnpm --filter @cryptopoker/api typecheck`
+- `pnpm --filter @cryptopoker/api test`
+
+Next heartbeat steps: commit, push branch, open PR with Paperclip issue URL in PR description, then re-wake QA with branch/PR + validation commands + operator tooling paths.

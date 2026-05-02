@@ -55,3 +55,14 @@ Requesting human unblock to keep flow moving:
 - Please assign `02-web-typecheck-react-types-missing.md` to frontend owner now.
 - After that fix merges, rerun `pnpm typecheck` and then mark CRY-111 done.
 - PR to review for this ticket remains: https://github.com/bilyuk/cryptopoker/pull/4
+
+### 2026-05-01 22:34 PT — CTO agent completion update
+
+CRY-112 blocker has been resolved in this PR branch:
+
+- Added `@types/react` and `@types/react-dom` to `apps/web` devDependencies.
+- Re-ran validation:
+  - `pnpm typecheck`: pass
+  - `pnpm test`: pass
+
+CRY-111 implementation, validation, and PR requirements are now satisfied. Remaining step is human PR review/merge.

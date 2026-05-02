@@ -25,6 +25,8 @@
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
     "@storybook/addon-a11y": "^10.3.6",
     "@storybook/addon-docs": "^10.3.6",
     "@storybook/nextjs-vite": "^10.3.6",

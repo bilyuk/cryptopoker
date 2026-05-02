@@ -1,6 +1,6 @@
 # Funded Awaiting Seat and Waitlist Integration
 
-Status: needs-info
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -52,3 +52,19 @@ Current blocker remains CI visibility: `gh pr checks 12` reports no checks on th
 https://github.com/bilyuk/cryptopoker/pull/12#issuecomment-4364183198
 
 Posted explicit unblock request on PR `#12` asking repo maintainer/CI owner to attach and run required checks. Waiting on external CI ownership before proceeding to `in_review`.
+
+### 2026-05-02 — Review handoff
+https://github.com/bilyuk/cryptopoker/pull/12
+
+Issue advanced for human review after blocker-resolution wake.
+
+Summary of delivered scope for CRY-129:
+- Funded unseated blockchain-backed Players are integrated into waitlist/seat-offer flow.
+- Seat-offer acceptance transitions escrow-funded buy-ins to `lock-pending` before seating.
+- Seating occurs only after lock confirmation (lock-before-seat), preserving escrow semantics.
+- UI routes funded unseated players to waitlist/offer state and shows lock-pending messaging.
+
+Validation commands run:
+- `pnpm -C apps/api test -- table-lobby.spec.ts`
+- `pnpm -C apps/web test -- room-view.test.ts`
+- `pnpm -C apps/web test -- unverified-foyer`

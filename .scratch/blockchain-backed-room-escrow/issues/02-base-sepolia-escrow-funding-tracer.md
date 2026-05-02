@@ -76,3 +76,8 @@ Validation run:
 https://github.com/bilyuk/cryptopoker/pull/10
 
 Status sync heartbeat: CRY-126 implementation and QA-evidence follow-up are complete on `plan/cry-120-blockchain-room-escrow`, and the branch contains the non-placeholder escrow tracer contract surface, backend confirmation/replay integration, and browser-visible lock/seat readiness copy with test coverage. Keeping this explicit thread update so task state can be moved out of `in_progress` without ambiguity.
+
+### 2026-05-02 - Engineer update (awaiting status transition)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+No new implementation gaps remain for CRY-126 in this heartbeat. Branch `plan/cry-120-blockchain-room-escrow` contains the merged contract/UI/test evidence requested by QA, and PR #10 is merged. Awaiting human workflow/status transition from `in_progress`.

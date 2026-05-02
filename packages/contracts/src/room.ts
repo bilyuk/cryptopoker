@@ -29,7 +29,17 @@ export type BuyInDto = {
   roomId: string;
   playerId: string;
   amount: number;
-  status: "pending" | "host-verified" | "rejected" | "funding-pending" | "escrow-funded" | "in-play" | "refund-pending" | "refunded" | "expired";
+  status:
+    | "pending"
+    | "host-verified"
+    | "rejected"
+    | "funding-pending"
+    | "escrow-funded"
+    | "funding-failed"
+    | "in-play"
+    | "refund-pending"
+    | "refunded"
+    | "expired";
   network: "base";
   stablecoin: "USDC";
   fundingAddress: string;
@@ -112,6 +122,8 @@ export type EscrowDepositEventRequest = {
   fundingReference: string;
   txHash: string;
   blockNumber: number;
+  currentBlockNumber: number;
+  reverted?: boolean;
 };
 
 export type EscrowRefundEventRequest = {

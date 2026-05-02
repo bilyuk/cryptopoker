@@ -17,6 +17,13 @@ export class LobbyStore {
   private readonly roomIdBySeatOfferId = new Map<string, string>();
   private readonly processedEscrowEvents = new Set<string>();
   private readonly processedEscrowTransactions = new Set<string>();
+  private readonly pendingEscrowDeposits = new Map<string, {
+    fundingReference: string;
+    txHash: string;
+    blockNumber: number;
+    reverted: boolean;
+  }>();
+  private lastEscrowProcessedBlockNumber = 0;
 
   constructor(
     @Inject(RealtimeService) private readonly realtime: RealtimeService,
@@ -281,7 +288,20 @@ export class LobbyStore {
     };
   }
 
-  confirmEscrowDeposit(eventId: string, fundingReference: string, txHash: string): BuyInDto {
+  confirmEscrowDeposit(
+    eventId: string,
+    fundingReference: string,
+    txHash: string,
+    blockNumber: number,
+    currentBlockNumber: number,
+    reverted = false,
+  ): BuyInDto {
+    const confirmations = currentBlockNumber - blockNumber + 1;
+    if (confirmations < 2) {
+      this.pendingEscrowDeposits.set(eventId, { fundingReference, txHash, blockNumber, reverted });
+      const { buyIn } = this.requireBuyInByFundingReference(fundingReference);
+      return { ...buyIn };
+    }
     if (this.processedEscrowEvents.has(eventId) || this.processedEscrowTransactions.has(txHash)) {
       const { buyIn } = this.requireBuyInByFundingReference(fundingReference);
       return { ...buyIn };
@@ -294,18 +314,36 @@ export class LobbyStore {
       buyIn.status = "expired";
       throw new BadRequestException({ code: "FUNDING_INTENT_EXPIRED", message: "Funding intent has expired for this Buy-In." });
     }
-    buyIn.status = "escrow-funded";
+    buyIn.status = reverted ? "funding-failed" : "escrow-funded";
     buyIn.fundedAt = new Date().toISOString();
     this.processedEscrowEvents.add(eventId);
     this.processedEscrowTransactions.add(txHash);
+    this.pendingEscrowDeposits.delete(eventId);
+    this.lastEscrowProcessedBlockNumber = Math.max(this.lastEscrowProcessedBlockNumber, blockNumber);
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+  }
 
-    const buyInPlayer = this.roomPlayerDto(room, buyIn.playerId);
-    const seatNumber = lowestOpenSeatWithoutPendingOffer(room);
-    const seatingResult = seatNumber !== undefined
-      ? tableSeating.claimSeat(buyInPlayer, room, seatNumber)
-      : tableSeating.joinWaitlist(buyInPlayer, room);
+  replayEscrowDeposits(currentBlockNumber: number): BuyInDto[] {
+    const confirmed: BuyInDto[] = [];
+    for (const [eventId, pending] of this.pendingEscrowDeposits.entries()) {
+      const confirmations = currentBlockNumber - pending.blockNumber + 1;
+      if (confirmations < 2) continue;
+      confirmed.push(
+        this.confirmEscrowDeposit(
+          eventId,
+          pending.fundingReference,
+          pending.txHash,
+          pending.blockNumber,
+          currentBlockNumber,
+          pending.reverted,
+        ),
+      );
+    }
+    return confirmed;
+  }
 
-    return this.commit(commandResult({ ...buyIn }, seatingResult.events));
+  lastEscrowProcessedBlock(): number {
+    return this.lastEscrowProcessedBlockNumber;
   }
 
   markBuyInExpired(buyInId: string): BuyInDto {

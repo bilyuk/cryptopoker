@@ -30,7 +30,7 @@ export function RoomScreen(props: RoomScreenProps) {
   const isSeated = currentPlayer?.seated ?? false;
   const status = currentPlayer?.buyInStatus ?? "none";
 
-  if (!isSeated && status !== "escrow-funded" && status !== "in-play") {
+  if (!isSeated && status !== "in-play") {
     return (
       <UnverifiedFoyer
         playerName={props.playerName}
@@ -44,7 +44,7 @@ export function RoomScreen(props: RoomScreenProps) {
     );
   }
 
-  if (!isSeated && (status === "escrow-funded" || status === "in-play")) {
+  if (!isSeated && status === "in-play") {
     const position = room.currentPlayerWaitlistPosition ?? 1;
     return (
       <WaitlistFoyer

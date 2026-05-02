@@ -97,6 +97,7 @@ function bestBuyInForPlayer(room: RoomDto, playerId: PlayerDto["id"]) {
   return (
     playerBuyIns.find((buyIn) => buyIn.status === "in-play") ??
     playerBuyIns.find((buyIn) => buyIn.status === "escrow-funded") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "funding-failed") ??
     playerBuyIns.find((buyIn) => buyIn.status === "funding-pending") ??
     playerBuyIns.find((buyIn) => buyIn.status === "refund-pending") ??
     playerBuyIns.find((buyIn) => buyIn.status === "refunded") ??

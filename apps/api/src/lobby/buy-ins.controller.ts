@@ -38,7 +38,24 @@ export class BuyInsController {
 
   @Post("/escrow/events/deposits")
   confirmEscrowDeposit(@Body() body: EscrowDepositEventRequest): BuyInResponse {
-    return { buyIn: this.lobby.confirmEscrowDeposit(body.eventId, body.fundingReference, body.txHash) };
+    return {
+      buyIn: this.lobby.confirmEscrowDeposit(
+        body.eventId,
+        body.fundingReference,
+        body.txHash,
+        body.blockNumber,
+        body.currentBlockNumber,
+        body.reverted,
+      ),
+    };
+  }
+
+  @Post("/escrow/events/deposits/replay")
+  replayEscrowDeposits(@Body() body: { currentBlockNumber: number }): { buyIns: BuyInResponse["buyIn"][]; lastProcessedBlockNumber: number } {
+    return {
+      buyIns: this.lobby.replayEscrowDeposits(body.currentBlockNumber),
+      lastProcessedBlockNumber: this.lobby.lastEscrowProcessedBlock(),
+    };
   }
 
   @Post("/escrow/events/refunds")

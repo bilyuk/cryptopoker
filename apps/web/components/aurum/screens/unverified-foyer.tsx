@@ -37,6 +37,8 @@ export function UnverifiedFoyer({
   const showRefundPending = status === "refund-pending";
   const showRefunded = status === "refunded" && !submitting;
   const showExpired = status === "expired" && !submitting;
+  const showFundingFailed = status === "funding-failed" && !submitting;
+  const showEscrowFunded = status === "escrow-funded";
   const showPicker = !showPending;
 
   async function handleRequest() {
@@ -73,6 +75,12 @@ export function UnverifiedFoyer({
               </p>
             </div>
           )}
+          {showFundingFailed && (
+            <div className="mb-5 rounded-md border border-danger-400/45 bg-danger-400/10 p-3">
+              <p className="aurum-eyebrow text-danger-300">Funding reverted</p>
+              <p className="mt-2 text-sm text-ivory-100">The chain event was reverted or failed. Submit a new funding intent.</p>
+            </div>
+          )}
           {showRefundPending && (
             <div className="mb-5 rounded-md border border-champagne-500/45 bg-champagne-500/10 p-3">
               <p className="aurum-eyebrow text-champagne-500">Refund pending</p>
@@ -95,8 +103,14 @@ export function UnverifiedFoyer({
               <p className="font-display text-3xl text-ivory-50">
                 Waiting for escrow deposit confirmation.
               </p>
+              <p className="text-sm text-sapphire-200">Your Buy-In remains pending until confirmation depth is met.</p>
+            </div>
+          ) : showEscrowFunded ? (
+            <div className="grid gap-4" role="status" aria-live="polite">
+              <p className="aurum-eyebrow text-verified-400">Escrowed Buy-In confirmed</p>
+              <p className="font-display text-3xl text-ivory-50">Funding confirmed on-chain.</p>
               <p className="text-sm text-sapphire-200">
-                You will be seated automatically after indexed chain confirmation.
+                Tracer phase complete: your Room now shows escrow-funded state without auto-seating.
               </p>
             </div>
           ) : (

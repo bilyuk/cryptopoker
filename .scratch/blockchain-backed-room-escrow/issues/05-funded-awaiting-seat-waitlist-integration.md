@@ -47,3 +47,8 @@ https://github.com/bilyuk/cryptopoker/pull/12
 
 Opened PR from the current claimed worktree branch `plan/cry-120-blockchain-room-escrow` to keep CRY-129 in PR-driven flow for this checkout context.
 Current blocker remains CI visibility: `gh pr checks 12` reports no checks on this branch, so the issue cannot advance to `in_review` until repository CI is attached/running.
+
+### 2026-05-02 — PR unblock comment posted
+https://github.com/bilyuk/cryptopoker/pull/12#issuecomment-4364183198
+
+Posted explicit unblock request on PR `#12` asking repo maintainer/CI owner to attach and run required checks. Waiting on external CI ownership before proceeding to `in_review`.

@@ -110,7 +110,7 @@ export function UnverifiedFoyer({
               <p className="aurum-eyebrow text-verified-400">Escrowed Buy-In confirmed</p>
               <p className="font-display text-3xl text-ivory-50">Funding confirmed on-chain.</p>
               <p className="text-sm text-sapphire-200">
-                Tracer phase complete: your Room now shows escrow-funded state without auto-seating.
+                Ready for lock-before-seat: escrow funding is confirmed and queued for the next lock/seat stage.
               </p>
             </div>
           ) : (

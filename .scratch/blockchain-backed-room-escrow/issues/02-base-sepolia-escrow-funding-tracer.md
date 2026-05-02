@@ -57,3 +57,17 @@ Final validation references from merged branch:
 - `pnpm --filter @cryptopoker/api test`
 - `pnpm --filter @cryptopoker/web test`
 - `pnpm -w typecheck`
+
+### 2026-05-02 - Engineer update (QA evidence pass)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Addressed QA blockers from CRY-151:
+- Replaced placeholder escrow contract scaffold with concrete funding-tracer contract surface in `RoomEscrow.sol` (registered-room enforcement, native-USDC-only enforcement, one-shot permit intent consumption, and indexed funding events).
+- Added contract workspace test assertions proving the contract no longer contains placeholder `NotImplemented` behavior and exposes the funding tracer interface/events.
+- Added browser-visible funded-state evidence test for lock/seat readiness copy in `UnverifiedFoyer`, and removed tracer-only language that required manual interpretation.
+
+Validation run:
+- `pnpm --filter @cryptopoker/escrow-contracts test`
+- `pnpm --filter @cryptopoker/web test`
+- `pnpm --filter @cryptopoker/api test`
+- `pnpm -w typecheck`

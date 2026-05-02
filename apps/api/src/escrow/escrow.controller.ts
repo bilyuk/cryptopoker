@@ -3,8 +3,11 @@ import type {
   FailEscrowTransferRequest,
   FinalizeEscrowTransferRequest,
   QueueEscrowTransferRequest,
+  RegisterRoomSettlementDelegationRequest,
   RecordHandSettlementRequest,
+  RevokeRoomSettlementDelegationRequest,
   RoomCloseoutReconciliationRequest,
+  ValidateEscrowPayoutAuthorizationRequest,
 } from "@cryptopoker/contracts";
 import { EscrowService } from "./escrow.service.js";
 
@@ -57,6 +60,27 @@ export class EscrowController {
   reconcileCloseout(@Param("roomId") roomId: string, @Body() body: Omit<RoomCloseoutReconciliationRequest, "roomId">) {
     return {
       reconciliation: this.escrowService.reconcileRoomCloseout({ roomId, onchainBalanceByPlayer: body.onchainBalanceByPlayer }),
+    };
+  }
+
+  @Post("/rooms/:roomId/delegations/register")
+  registerRoomSettlementDelegation(@Param("roomId") roomId: string, @Body() body: Omit<RegisterRoomSettlementDelegationRequest, "roomId">) {
+    return {
+      delegation: this.escrowService.registerRoomSettlementDelegation({ roomId, ...body }),
+    };
+  }
+
+  @Post("/rooms/:roomId/delegations/revoke")
+  revokeRoomSettlementDelegation(@Param("roomId") roomId: string, @Body() body: Omit<RevokeRoomSettlementDelegationRequest, "roomId">) {
+    return {
+      delegation: this.escrowService.revokeRoomSettlementDelegation({ roomId, ...body }),
+    };
+  }
+
+  @Post("/payouts/authorize")
+  authorizePayout(@Body() body: ValidateEscrowPayoutAuthorizationRequest) {
+    return {
+      authorization: this.escrowService.validatePayoutAuthorization(body),
     };
   }
 }

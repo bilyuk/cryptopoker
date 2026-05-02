@@ -149,3 +149,54 @@ export type RoomCloseoutReconciliationResultDto = {
     delta: number;
   }>;
 };
+
+export type EscrowDelegationDomainDto = {
+  name: "CryptopokerEscrow";
+  version: "1";
+  chainId: number;
+  verifyingContract: string;
+};
+
+export type RegisterRoomSettlementDelegationRequest = {
+  roomId: string;
+  hostWalletAddress: string;
+  delegateWalletAddress: string;
+  contractAddress: string;
+  chainId: number;
+  signerWalletAddress: string;
+  signatureDomain: EscrowDelegationDomainDto;
+  issuedAt?: string;
+  ttlHours?: number;
+};
+
+export type RevokeRoomSettlementDelegationRequest = {
+  roomId: string;
+  hostWalletAddress: string;
+  signerWalletAddress: string;
+  revokedAt?: string;
+  reason?: string;
+};
+
+export type RoomSettlementDelegationRecordDto = {
+  roomId: string;
+  hostWalletAddress: string;
+  delegateWalletAddress: string;
+  contractAddress: string;
+  chainId: number;
+  signerWalletAddress: string;
+  signatureDomain: EscrowDelegationDomainDto;
+  issuedAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
+  revokeReason: string | null;
+};
+
+export type ValidateEscrowPayoutAuthorizationRequest = {
+  roomId: string;
+  playerWalletAddress: string;
+  amount: number;
+  nonce: string;
+  contractAddress: string;
+  chainId: number;
+  signerWalletAddress: string;
+};

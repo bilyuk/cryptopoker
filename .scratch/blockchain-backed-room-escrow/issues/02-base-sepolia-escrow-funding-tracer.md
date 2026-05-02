@@ -1,6 +1,6 @@
 # Base Sepolia Escrow Funding Tracer
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -23,3 +23,15 @@ Create the first Base Sepolia funding tracer: a shared immutable escrow contract
 ## Blocked by
 
 - [01 - Blockchain-Backed Room Creation and Wallet Preflight](01-blockchain-backed-room-creation-wallet-preflight.md)
+
+## Comments
+
+### 2026-05-02 - Engineer update
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Implemented CRY-126 tracer-phase behavior on the shared branch: escrow deposit events now enforce confirmation depth (`currentBlock - txBlock + 1 >= 2`), under-confirmed deposit events are retained for replay processing, replay endpoint processes pending events once they cross threshold, and confirmed blockchain funding updates Buy-In state to `escrow-funded` without auto-seating in this phase. Added reverted/failure state handling (`funding-failed`) and updated foyer UI to surface pending, confirmed escrowed buy-in, and reverted funding states.
+
+Validation run:
+- `pnpm -w typecheck`
+- `pnpm --filter @cryptopoker/api test`
+- `pnpm --filter @cryptopoker/web test`

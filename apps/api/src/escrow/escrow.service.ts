@@ -11,6 +11,7 @@ import {
   type RoomCloseoutReconciliationRequest,
   type RoomCloseoutReconciliationResultDto,
 } from "@cryptopoker/contracts";
+import { LobbyStore } from "../lobby/lobby.store.js";
 import { ESCROW_FOUNDATION_PLAN, type EscrowFoundationPlan } from "./escrow.types.js";
 
 type TransferType = "payout" | "refund";
@@ -26,6 +27,8 @@ export class EscrowService {
   private readonly transferIdByIdempotencyKey = new Map<string, string>();
   private readonly processedEscrowEvents = new Set<string>();
   private readonly processedTxHashes = new Set<string>();
+
+  constructor(private readonly lobbyStore: LobbyStore) {}
 
   getFoundationPlan(): EscrowFoundationPlan {
     return ESCROW_FOUNDATION_PLAN;
@@ -79,6 +82,7 @@ export class EscrowService {
       },
     });
     this.handSettlementLedgerEntryIdByHand.set(request.handId, ledgerEntry.id);
+    this.lobbyStore.applyPendingTopUps(request.roomId);
 
     return {
       idempotent: false,

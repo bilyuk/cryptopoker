@@ -45,6 +45,7 @@ describe("persistent Player session", () => {
       expect(renamed.body.player).toEqual({
         id: created.body.player.id,
         displayName: "river_rat",
+        walletAddress: null,
       });
     } finally {
       await app.close();

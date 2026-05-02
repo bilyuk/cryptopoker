@@ -108,14 +108,14 @@ export function expireSeatOffer(room: RoomRecord, offer: SeatOfferDto): CommandR
 }
 
 function assertVerifiedBuyIn(room: RoomRecord, playerId: string): void {
-  if (!room.buyIns.some((buyIn) => buyIn.playerId === playerId && buyIn.status === "host-verified")) {
-    throw new BadRequestException({ code: "HOST_VERIFIED_BUY_IN_REQUIRED", message: "A Host-Verified Buy-In is required first." });
+  if (!room.buyIns.some((buyIn) => buyIn.playerId === playerId && (buyIn.status === "host-verified" || buyIn.status === "escrow-funded" || buyIn.status === "in-play"))) {
+    throw new BadRequestException({ code: "ESCROW_FUNDED_BUY_IN_REQUIRED", message: "An escrow-funded Buy-In is required first." });
   }
 }
 
 function verifiedStack(room: RoomRecord, playerId: string): number {
   return room.buyIns
-    .filter((buyIn) => buyIn.playerId === playerId && buyIn.status === "host-verified")
+    .filter((buyIn) => buyIn.playerId === playerId && (buyIn.status === "host-verified" || buyIn.status === "escrow-funded" || buyIn.status === "in-play"))
     .reduce((total, buyIn) => total + buyIn.amount, 0);
 }
 

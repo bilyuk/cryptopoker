@@ -7,6 +7,7 @@ import {
   type CurrentPlayerResponse,
   type RoomResponse,
   type RoomUpdatedPayload,
+  type WalletPreflightResponse,
 } from "@cryptopoker/contracts";
 import { defaultRooms } from "@/components/aurum/data";
 import type { AppScreen, CreateRoomValues, Room } from "@/components/aurum/types";
@@ -144,11 +145,21 @@ export function useRoomClient() {
       method: "POST",
       body: JSON.stringify({
         name: values.name,
+        mode: values.mode,
         ...parseBlinds(values.blinds),
         buyInMin: parseMoney(values.buyInMin),
         buyInMax: parseMoney(values.buyInMax),
         seatCount: Number(values.seats),
         actionTimerSeconds: parseTimer(values.timer),
+        blockchain: values.mode === "blockchain-backed"
+          ? {
+              network: "base",
+              stablecoin: "USDC",
+              maxTotalBuyIn: parseMoney(values.buyInMax),
+              antiRatholing: true,
+              noRake: true,
+            }
+          : null,
       }),
     });
 
@@ -246,16 +257,32 @@ export function useRoomClient() {
 
   async function runRoomCommand(path: string, body?: unknown) {
     if (!selectedRoom.inviteCode) return;
-    await apiFetch(path, {
+    return apiFetch(path, {
       method: "POST",
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
   }
 
-  const requestBuyIn = (amount: number) =>
-    runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount });
-  const approveBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/approve`);
-  const rejectBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/reject`);
+  const requestBuyIn = async (amount: number) => {
+    const preflightResponse = await apiFetch(
+      `/rooms/${selectedRoom.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC`,
+    );
+    if (!preflightResponse.ok) return;
+    const preflight = (await preflightResponse.json()) as WalletPreflightResponse;
+    if (!preflight.preflight.fundingAllowed) {
+      setInviteActionMessage(
+        preflight.preflight.status === "wallet-required"
+          ? "Connect a wallet before funding this Blockchain-Backed Room."
+          : preflight.preflight.status === "wrong-chain"
+            ? "Switch your Connected Wallet to Base before funding."
+            : "Use native USDC before funding this Blockchain-Backed Room.",
+      );
+      return;
+    }
+    await runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount });
+  };
+  const expireBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/expire`);
+  const refundBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/refund`);
   const leaveSeat = () => runRoomCommand("/seats/leave", { roomId: selectedRoom.id });
   const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
   const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
@@ -264,8 +291,8 @@ export function useRoomClient() {
 
   return {
     acceptSeatOffer,
-    approveBuyIn,
-    rejectBuyIn,
+    expireBuyIn,
+    refundBuyIn,
     createRoom,
     declineSeatOffer,
     copyInvite,

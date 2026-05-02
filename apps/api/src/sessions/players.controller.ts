@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Headers, HttpCode, Inject, Patch, Post, 
 import type {
   CreateGuestSessionRequest,
   CurrentPlayerResponse,
+  LinkWalletRequest,
   UpdateDisplayNameRequest,
 } from "@cryptopoker/contracts";
 import { clearSessionCookie, createSessionCookie, readSessionCookie } from "./session-cookie.js";
@@ -34,10 +35,25 @@ export class PlayersController {
     return { player: currentPlayerFromCookie(this.sessions, cookieHeader).updateDisplayName(body.displayName) };
   }
 
+  @Post("/players/current/wallet")
+  linkWallet(@Headers("cookie") cookieHeader: string | undefined, @Body() body: LinkWalletRequest): CurrentPlayerResponse {
+    const walletAddress = body.walletAddress?.trim() || provisionWalletAddress();
+    return { player: currentPlayerFromCookie(this.sessions, cookieHeader).linkWallet(walletAddress) };
+  }
+
   @Delete("/players/current/session")
   @HttpCode(204)
   deleteCurrentSession(@Headers("cookie") cookieHeader: string | undefined, @Res({ passthrough: true }) response: HeaderResponse): void {
     this.sessions.deleteSession(readSessionCookie(cookieHeader));
     response.setHeader("Set-Cookie", clearSessionCookie());
   }
+}
+
+function provisionWalletAddress(): string {
+  const alphabet = "0123456789abcdef";
+  let value = "0x";
+  for (let i = 0; i < 40; i += 1) {
+    value += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return value;
 }

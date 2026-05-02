@@ -70,6 +70,7 @@ export type RoomSeatOfferSummary = {
 
 export type CreateRoomValues = {
   name: string;
+  mode: "host-verified" | "blockchain-backed";
   blinds: string;
   buyInMin: string;
   buyInMax: string;

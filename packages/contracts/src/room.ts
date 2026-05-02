@@ -8,6 +8,14 @@ export type RoomSettingsDto = {
   buyInMax: number;
   seatCount: number;
   actionTimerSeconds: number;
+  mode?: "host-verified" | "blockchain-backed";
+  blockchain?: {
+    network: "base";
+    stablecoin: "USDC";
+    maxTotalBuyIn: number;
+    antiRatholing: boolean;
+    noRake: boolean;
+  } | null;
 };
 
 export type SeatDto = {
@@ -21,7 +29,14 @@ export type BuyInDto = {
   roomId: string;
   playerId: string;
   amount: number;
-  status: "pending" | "host-verified" | "rejected";
+  status: "pending" | "host-verified" | "rejected" | "funding-pending" | "escrow-funded" | "in-play" | "refund-pending" | "refunded" | "expired";
+  network: "base";
+  stablecoin: "USDC";
+  fundingAddress: string;
+  fundingReference: string;
+  expiresAt: string;
+  fundedAt: string | null;
+  refundedAt: string | null;
 };
 
 export type WaitlistEntryDto = {
@@ -75,6 +90,35 @@ export type SeatOfferResponse = {
 export type RequestBuyInRequest = {
   roomId: string;
   amount: number;
+};
+
+export type WalletPreflightResponse = {
+  preflight: {
+    roomMode: "host-verified" | "blockchain-backed";
+    connectedWalletAddress: string | null;
+    boundWalletAddress: string | null;
+    requiredNetwork: "base" | null;
+    requiredStablecoin: "USDC" | null;
+    connectedNetwork: "base" | "other" | null;
+    connectedStablecoin: "USDC" | "other" | null;
+    status: "ready" | "wallet-required" | "wrong-chain" | "unsupported-token";
+    fundingAllowed: boolean;
+    noRake: boolean;
+  };
+};
+
+export type EscrowDepositEventRequest = {
+  eventId: string;
+  fundingReference: string;
+  txHash: string;
+  blockNumber: number;
+};
+
+export type EscrowRefundEventRequest = {
+  eventId: string;
+  buyInId: string;
+  txHash: string;
+  blockNumber: number;
 };
 
 export type RoomCommandRequest = {

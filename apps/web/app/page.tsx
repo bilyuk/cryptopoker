@@ -41,8 +41,8 @@ export default function Home() {
           room={roomClient.selectedRoom}
           onBackToLobby={() => roomClient.setScreen("lobby")}
           onDeal={roomClient.startFirstHand}
-          onApproveBuyIn={roomClient.approveBuyIn}
-          onRejectBuyIn={roomClient.rejectBuyIn}
+          onExpireBuyIn={roomClient.expireBuyIn}
+          onRefundBuyIn={roomClient.refundBuyIn}
           onLeaveSeat={roomClient.leaveSeat}
           onInvitePreview={() => roomClient.setScreen("invite")}
           onCopyInvite={roomClient.copyInvite}

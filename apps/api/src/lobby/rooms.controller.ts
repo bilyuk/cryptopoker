@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Headers, Inject, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Inject, Param, Patch, Post, Query } from "@nestjs/common";
 import type {
   CreateRoomRequest,
   RoomResponse,
   UpdateRoomSettingsRequest,
+  WalletPreflightResponse,
 } from "@cryptopoker/contracts";
 import { SessionStore } from "../sessions/session.store.js";
 import { currentPlayerFromCookie } from "../sessions/current-player.js";
@@ -49,5 +50,23 @@ export class RoomsController {
   startFirstHand(@Headers("cookie") cookieHeader: string | undefined, @Param("roomId") roomId: string): RoomResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.startFirstHand(player, roomId) };
+  }
+
+  @Get("/rooms/:roomId/wallet-preflight")
+  walletPreflight(
+    @Headers("cookie") cookieHeader: string | undefined,
+    @Param("roomId") roomId: string,
+    @Query("connectedNetwork") connectedNetwork: string | undefined,
+    @Query("connectedStablecoin") connectedStablecoin: string | undefined,
+  ): WalletPreflightResponse {
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
+    return {
+      preflight: this.lobby.walletPreflight(
+        player,
+        roomId,
+        connectedNetwork === "base" ? "base" : connectedNetwork ? "other" : null,
+        connectedStablecoin === "USDC" ? "USDC" : connectedStablecoin ? "other" : null,
+      ),
+    };
   }
 }

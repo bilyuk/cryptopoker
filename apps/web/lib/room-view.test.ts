@@ -55,8 +55,8 @@ describe("Room view model", () => {
         { playerId: "guest-1", displayName: "guest_tester", role: "player" },
       ],
       buyIns: [
-        { id: "host-buy", roomId: "room-1", playerId: "host-1", amount: 40, status: "host-verified" },
-        { id: "guest-buy", roomId: "room-1", playerId: "guest-1", amount: 80, status: "host-verified" },
+        buyIn("host-buy", "host-1", 40, "in-play"),
+        buyIn("guest-buy", "guest-1", 80, "in-play"),
       ],
       seats: [
         { seatNumber: 1, playerId: "host-1", tableStack: 40 },
@@ -80,9 +80,7 @@ describe("Room view model", () => {
       stack: "$80.00",
     });
     expect(room.players).toHaveLength(2);
-    expect(room.players[1]).toEqual(
-      expect.objectContaining({ playerId: "guest-1", seated: true, stack: "$80.00", buyInStatus: "host-verified" }),
-    );
+      expect(room.players[1]).toEqual(expect.objectContaining({ playerId: "guest-1", seated: true, stack: "$80.00", buyInStatus: "in-play" }));
   });
 
   it("surfaces pending Buy-Ins for the host banner without listing them in seat roster", () => {
@@ -93,7 +91,7 @@ describe("Room view model", () => {
         { playerId: "guest-1", displayName: "guest_tester", role: "player" },
       ],
       buyIns: [
-        { id: "buy-in-1", roomId: "room-1", playerId: "guest-1", amount: 40, status: "pending" },
+        buyIn("buy-in-1", "guest-1", 40, "funding-pending"),
       ],
     });
 
@@ -157,3 +155,25 @@ describe("Room view model", () => {
     ]);
   });
 });
+
+function buyIn(
+  id: string,
+  playerId: string,
+  amount: number,
+  status: "funding-pending" | "escrow-funded" | "in-play" | "refund-pending" | "refunded" | "expired",
+) {
+  return {
+    id,
+    roomId: "room-1",
+    playerId,
+    amount,
+    status,
+    network: "base" as const,
+    stablecoin: "USDC" as const,
+    fundingAddress: "0x1111111111111111111111111111111111111111",
+    fundingReference: `ref-${id}`,
+    expiresAt: "2026-05-02T00:00:00.000Z",
+    fundedAt: status === "funding-pending" ? null : "2026-05-02T00:01:00.000Z",
+    refundedAt: status === "refunded" ? "2026-05-02T00:02:00.000Z" : null,
+  };
+}

@@ -60,13 +60,13 @@ describe("realtime Room and Player events", () => {
       });
 
       const roomUpdated = once(hostSocket, REALTIME_EVENTS.roomUpdated);
-      // Host is already at Seat 1 (auto). first auto-seats at Seat 2 on approve.
-      await verify(server, hostCookie, firstCookie, roomId, 100);
+      // Host is already at Seat 1 (auto). first auto-seats at Seat 2 after deposit confirmation.
+      await fundAndConfirm(server, firstCookie, roomId, 100, "first");
       await expect(roomUpdated).resolves.toEqual(expect.objectContaining({ roomId }));
 
       // Heads-up room is now full. second auto-waitlists at #1. third auto-waitlists at #2.
-      await verify(server, hostCookie, secondCookie, roomId, 120);
-      await verify(server, hostCookie, thirdCookie, roomId, 140);
+      await fundAndConfirm(server, secondCookie, roomId, 120, "second");
+      await fundAndConfirm(server, thirdCookie, roomId, 140, "third");
       const secondOfferPrompt = once(secondSocket, REALTIME_EVENTS.seatOfferCreated);
       const thirdOfferPrompt = once(thirdSocket, REALTIME_EVENTS.seatOfferCreated, 200);
       await request(server).post("/seats/leave").set("Cookie", firstCookie).send({ roomId }).expect(201);
@@ -94,9 +94,19 @@ async function join(server: Parameters<typeof request>[0], cookie: string, invit
   await request(server).post(`/invite-links/${inviteCode}/join`).set("Cookie", cookie).expect(201);
 }
 
-async function verify(server: Parameters<typeof request>[0], hostCookie: string, playerCookie: string, roomId: string, amount: number): Promise<void> {
+async function fundAndConfirm(
+  server: Parameters<typeof request>[0],
+  playerCookie: string,
+  roomId: string,
+  amount: number,
+  id: string,
+): Promise<void> {
+  await request(server).post("/players/current/wallet").set("Cookie", playerCookie).send({}).expect(201);
   const buyIn = await request(server).post("/buy-ins").set("Cookie", playerCookie).send({ roomId, amount }).expect(201);
-  await request(server).post(`/buy-ins/${buyIn.body.buyIn.id}/approve`).set("Cookie", hostCookie).expect(201);
+  await request(server)
+    .post("/escrow/events/deposits")
+    .send({ eventId: `evt-${id}`, fundingReference: buyIn.body.buyIn.fundingReference, txHash: `tx-${id}`, blockNumber: 100 })
+    .expect(201);
 }
 
 async function connectSocket(url: string, cookie: string): Promise<Socket> {

@@ -12,8 +12,8 @@ type TableViewProps = {
   room: Room;
   isHost: boolean;
   isSeated: boolean;
-  onApproveBuyIn: (buyInId: string) => void;
-  onRejectBuyIn: (buyInId: string) => void;
+  onExpireBuyIn: (buyInId: string) => void;
+  onRefundBuyIn: (buyInId: string) => void;
   onLeaveSeat: () => void;
   onLeaveRoom: () => void;
   onDeal: () => void;
@@ -29,8 +29,8 @@ export function TableView({
   room,
   isHost,
   isSeated,
-  onApproveBuyIn,
-  onRejectBuyIn,
+  onExpireBuyIn,
+  onRefundBuyIn,
   onLeaveSeat,
   onLeaveRoom,
   onDeal,
@@ -54,11 +54,11 @@ export function TableView({
           <Panel className="mt-7 p-5 md:p-6" aria-live="polite">
             <div className="flex items-center justify-between gap-3">
               <p className="aurum-eyebrow">
-                Pending verifications {pendingCount > 0 ? `(${pendingCount})` : ""}
+                Funding pending {pendingCount > 0 ? `(${pendingCount})` : ""}
               </p>
             </div>
             {pendingCount === 0 ? (
-              <p className="mt-3 text-xs text-sapphire-300">No buy-ins waiting.</p>
+              <p className="mt-3 text-xs text-sapphire-300">No funding intents waiting.</p>
             ) : (
               <div className="mt-4 grid gap-2">
                 {room.pendingBuyIns.map((buyIn) => (
@@ -71,15 +71,15 @@ export function TableView({
                       <p className="aurum-mono-value mt-1">{buyIn.amount}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-                      <AurumButton className="min-h-10 px-3 text-xs" onClick={() => onApproveBuyIn(buyIn.id)}>
-                        Approve
+                      <AurumButton className="min-h-10 px-3 text-xs" onClick={() => onExpireBuyIn(buyIn.id)}>
+                        Expire
                       </AurumButton>
                       <AurumButton
                         className="min-h-10 px-3 text-xs"
                         variant="ghost"
-                        onClick={() => onRejectBuyIn(buyIn.id)}
+                        onClick={() => onRefundBuyIn(buyIn.id)}
                       >
-                        Reject
+                        Refund
                       </AurumButton>
                     </div>
                   </div>

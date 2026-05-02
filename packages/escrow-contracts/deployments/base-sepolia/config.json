@@ -1,0 +1,17 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "stablecoin": {
+    "symbol": "USDC",
+    "address": "0x0000000000000000000000000000000000000000",
+    "notes": "Replace with deployed native USDC address before deployment"
+  },
+  "signer": {
+    "strategy": "kms-operator-signer",
+    "keyAliasEnvVar": "ESCROW_SIGNER_KEY_ALIAS"
+  },
+  "eventIndexing": {
+    "strategy": "checkpointed-indexer-with-idempotent-replay",
+    "startBlockEnvVar": "ESCROW_INDEXER_START_BLOCK"
+  }
+}

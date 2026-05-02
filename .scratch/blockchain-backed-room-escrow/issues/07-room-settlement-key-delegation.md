@@ -1,6 +1,6 @@
 # Room Settlement Key Delegation
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -23,6 +23,16 @@ Let a Room Host delegate a scoped **Room Settlement Key** for one **Blockchain-B
 ## Blocked by
 
 - [04 - Lock-Before-Seat Escrow Seating](04-lock-before-seat-escrow-seating.md)
+
+## Comments
+
+- https://github.com/bilyuk/cryptopoker/pull/14
+- 2026-05-02: Implemented Room Settlement Key delegation and revocation flow in escrow API, including domain/scope checks for delegation registration and payout-authorization role boundaries (host vs delegate). Added integration tests covering registration, revocation, expiry, wrong signer/domain, wrong room/contract, and role boundary enforcement. Updated blockchain-backed Room creation disclosure copy to state host delegation and revocation responsibility.
+- Validation run:
+- `pnpm --filter @cryptopoker/contracts typecheck`
+- `pnpm --filter @cryptopoker/api test`
+- CI status: no GitHub checks reported for this branch.
+- Requesting QA/human review for CRY-131 on PR #14.
 
 ## Comments
 

@@ -20,6 +20,47 @@ const threeSeatSettings: RoomSettingsDto = {
 };
 
 describe("Velvet Room: auto-seat on Host verification", () => {
+  it("starts first hand only for host with at least two seated players", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+      const hostCookie = await createPlayer(server, "host");
+      const guestCookie = await createPlayer(server, "guest");
+
+      const created = await request(server).post("/rooms").set("Cookie", hostCookie).send(headsUpSettings).expect(201);
+      const roomId = created.body.room.id;
+
+      // Need at least two seated players.
+      await request(server)
+        .post(`/rooms/${roomId}/deal-first-hand`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("INSUFFICIENT_SEATED_PLAYERS"));
+
+      await join(server, guestCookie, created.body.room.inviteCode);
+      await verify(server, hostCookie, guestCookie, roomId, 1500);
+
+      // Non-host cannot deal.
+      await request(server).post(`/rooms/${roomId}/deal-first-hand`).set("Cookie", guestCookie).expect(403);
+
+      // Host can deal once, and Room is marked started.
+      const dealt = await request(server).post(`/rooms/${roomId}/deal-first-hand`).set("Cookie", hostCookie).expect(201);
+      expect(dealt.body.room.hasStarted).toBe(true);
+
+      // First hand can only be started once.
+      await request(server)
+        .post(`/rooms/${roomId}/deal-first-hand`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("HAND_ALREADY_STARTED"));
+    } finally {
+      await app.close();
+    }
+  });
+
   it("auto-seats the Host on Room creation, fills lowest open Seats on approval, and auto-waitlists when full", async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const app = moduleRef.createNestApplication();

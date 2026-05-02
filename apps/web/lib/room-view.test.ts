@@ -32,6 +32,7 @@ describe("Room view model", () => {
   it("exposes the buy-in range as { min, max } and renders empty seats", () => {
     const room = toUiRoomForPlayer(emptyRoom);
 
+    expect(room.hasStarted).toBe(false);
     expect(room.seats).toBe("0/6");
     expect(room.occupiedSeats).toBe(0);
     expect(room.seatCount).toBe(6);

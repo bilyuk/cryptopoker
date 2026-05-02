@@ -40,7 +40,7 @@ export default function Home() {
           playerName={roomClient.playerName}
           room={roomClient.selectedRoom}
           onBackToLobby={() => roomClient.setScreen("lobby")}
-          onDeal={() => roomClient.setScreen("table")}
+          onDeal={roomClient.startFirstHand}
           onApproveBuyIn={roomClient.approveBuyIn}
           onRejectBuyIn={roomClient.rejectBuyIn}
           onLeaveSeat={roomClient.leaveSeat}

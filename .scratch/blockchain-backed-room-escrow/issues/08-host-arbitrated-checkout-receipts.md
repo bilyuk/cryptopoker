@@ -37,3 +37,6 @@ Add **Checkout** for blockchain-backed Players: request checkout in the app, wai
 https://github.com/bilyuk/cryptopoker/pull/10
 
 CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.
+
+- https://github.com/bilyuk/cryptopoker/pull/11
+  2026-05-02 (agent): Wake `issue_blockers_resolved` received for CRY-132 with issue status `done`; tracker confirms no remaining blocker and stays `ready-for-human` for final closure workflow.

@@ -13,12 +13,12 @@ Create the first Base Sepolia funding tracer: a shared immutable escrow contract
 
 ## Acceptance criteria
 
-- [ ] The escrow contract accepts only the configured native USDC test asset for a registered blockchain-backed Room.
-- [ ] Funding uses a one-shot Permit2-style flow and emits indexed events for Room and Player.
-- [ ] The backend records events only after `currentBlock - txBlock + 1 >= ESCROW_CONFIRMATIONS`, with the containing block counted as confirmation 1.
-- [ ] The backend replays escrow events from the last processed block after restart.
-- [ ] The UI shows funding pending, confirmed **Escrowed Buy-In**, and failed or reverted funding states.
-- [ ] Contract and backend tests cover wrong Room, wrong amount, wrong token, confirmation threshold, event replay, and confirmed Escrowed Buy-In creation.
+- [x] The escrow contract accepts only the configured native USDC test asset for a registered blockchain-backed Room.
+- [x] Funding uses a one-shot Permit2-style flow and emits indexed events for Room and Player.
+- [x] The backend records events only after `currentBlock - txBlock + 1 >= ESCROW_CONFIRMATIONS`, with the containing block counted as confirmation 1.
+- [x] The backend replays escrow events from the last processed block after restart.
+- [x] The UI shows funding pending, confirmed **Escrowed Buy-In**, and failed or reverted funding states.
+- [x] Contract and backend tests cover wrong Room, wrong amount, wrong token, confirmation threshold, event replay, and confirmed Escrowed Buy-In creation.
 
 ## Blocked by
 
@@ -35,3 +35,14 @@ Validation run:
 - `pnpm -w typecheck`
 - `pnpm --filter @cryptopoker/api test`
 - `pnpm --filter @cryptopoker/web test`
+
+### 2026-05-02 - Engineer update (continuation)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Continuation shipped for CRY-126: added contract-side tracer tests for registered-room/native-USDC constraints plus one-shot Permit2-style intent consumption and indexed funding events (`roomId`, `playerId`), and finalized backend tracer threshold/replay coverage with confirmed escrowed buy-in state creation (without auto-seating). UI funding foyer states now include reverted/failure messaging (`funding-failed`) in addition to pending and confirmed.
+
+Additional validation run:
+- `pnpm --filter @cryptopoker/escrow-contracts test`
+- `pnpm --filter @cryptopoker/api test`
+- `pnpm --filter @cryptopoker/web test`
+- `pnpm -w typecheck`

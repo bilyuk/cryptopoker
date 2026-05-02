@@ -118,6 +118,12 @@ export function UnverifiedFoyer({
               <p className="text-xs text-sapphire-300">
                 Base USDC funding intent; seating unlocks once escrow is funded.
               </p>
+              <p className="text-xs text-sapphire-300">
+                Trust model disclosure: platform is non-custodial, and checkout amounts in this Blockchain-Backed Room use Host-Arbitrated Payouts.
+              </p>
+              <p className="text-xs text-sapphire-300">
+                No-rake policy: no percentage fee is taken from pots, Buy-Ins, Top-Ups, or Checkouts.
+              </p>
               {error && (
                 <p className="rounded-md border border-danger-400/45 bg-danger-400/10 px-3 py-2 text-xs text-ivory-100">
                   {error}

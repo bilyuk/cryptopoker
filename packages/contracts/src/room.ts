@@ -15,6 +15,31 @@ export type RoomSettingsDto = {
     maxTotalBuyIn: number;
     antiRatholing: boolean;
     noRake: boolean;
+    compliance?: {
+      allowedJurisdictions: string[];
+      publicAccess: "closed-alpha" | "public-disabled" | "public-enabled";
+      screeningMode: "allow-unchecked" | "require-clear";
+    };
+    launch?: {
+      testnetStatus: "pending" | "stable";
+      closedAlphaEnabled: boolean;
+      auditStatus: "pending" | "complete";
+      legalReviewStatus: "pending" | "complete";
+      monitoringStatus: "pending" | "ready";
+      emergencyControlsStatus: "pending" | "ready";
+      trustDisclosuresStatus: "pending" | "ready";
+      supportEvidenceStatus: "pending" | "ready";
+      excludedFeatures: (
+        | "tournaments"
+        | "multi-table-play"
+        | "fiat-ramps"
+        | "token-swaps"
+        | "referrals"
+        | "rake"
+      )[];
+      currentStage: "testnet" | "closed-alpha" | "public-launch";
+      publicLaunchBlockedReasons: string[];
+    };
   } | null;
 };
 
@@ -101,9 +126,24 @@ export type WalletPreflightResponse = {
     requiredStablecoin: "USDC" | null;
     connectedNetwork: "base" | "other" | null;
     connectedStablecoin: "USDC" | "other" | null;
-    status: "ready" | "wallet-required" | "wrong-chain" | "unsupported-token";
+    jurisdiction: string | null;
+    allowedJurisdictions: string[];
+    ageAttested: boolean;
+    legalLocationAttested: boolean;
+    trustModelDisclosureRequired: boolean;
+    status:
+      | "ready"
+      | "wallet-required"
+      | "wrong-chain"
+      | "unsupported-token"
+      | "launch-disabled"
+      | "jurisdiction-blocked"
+      | "age-attestation-required"
+      | "location-attestation-required"
+      | "wallet-screening-blocked";
     fundingAllowed: boolean;
     noRake: boolean;
+    blockedReason: string | null;
   };
 };
 

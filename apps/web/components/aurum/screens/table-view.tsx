@@ -157,6 +157,12 @@ export function TableView({
                   { label: "Seats", value: room.seats },
                 ]}
               />
+              <p className="mt-4 text-xs text-sapphire-300">
+                Non-custodial escrow with Host-Arbitrated Payouts. No platform rake on pots, Buy-Ins, Top-Ups, or Checkouts.
+              </p>
+              <p className="mt-2 text-xs text-sapphire-300">
+                Receipt disclosure: payout receipts identify the authorizing Host or settlement delegate plus on-chain transaction reference.
+              </p>
             </Panel>
 
             <Panel className="p-5 md:p-6">

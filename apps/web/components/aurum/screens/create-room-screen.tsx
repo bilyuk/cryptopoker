@@ -89,9 +89,14 @@ export function CreateRoomScreen({ playerName, onCancel, onCreate, onSignOut }: 
           </div>
           <p className="mt-9 text-xs text-sapphire-400">
             {values.mode === "blockchain-backed"
-              ? "Blockchain-Backed Rooms use Connected Wallet and Bound Wallet preflight on Base with native USDC. No platform rake."
+              ? "Blockchain-Backed Rooms use Connected Wallet and Bound Wallet preflight on Base with native USDC. No platform rake. Host-Arbitrated Payouts are disclosed before funding and on payout receipts."
               : "A private invite link is generated after you create the room. Share it with anyone you want at your table."}
           </p>
+          {values.mode === "blockchain-backed" && (
+            <p className="mt-2 text-xs text-sapphire-300">
+              Host delegation notice: checkout payouts are authorized by the Room Host (or delegated Room Settlement Key), while custody stays in on-chain escrow.
+            </p>
+          )}
           <div className="mt-7 grid gap-3 sm:grid-cols-[0.9fr_1.5fr] md:ml-auto md:max-w-sm">
             <AurumButton type="button" variant="ghost" onClick={onCancel}>
               Cancel

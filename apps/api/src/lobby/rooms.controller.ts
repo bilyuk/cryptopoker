@@ -58,6 +58,10 @@ export class RoomsController {
     @Param("roomId") roomId: string,
     @Query("connectedNetwork") connectedNetwork: string | undefined,
     @Query("connectedStablecoin") connectedStablecoin: string | undefined,
+    @Query("jurisdiction") jurisdiction: string | undefined,
+    @Query("ageAttested") ageAttested: string | undefined,
+    @Query("legalLocationAttested") legalLocationAttested: string | undefined,
+    @Query("walletScreening") walletScreening: string | undefined,
   ): WalletPreflightResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return {
@@ -66,6 +70,10 @@ export class RoomsController {
         roomId,
         connectedNetwork === "base" ? "base" : connectedNetwork ? "other" : null,
         connectedStablecoin === "USDC" ? "USDC" : connectedStablecoin ? "other" : null,
+        jurisdiction?.trim().toUpperCase() || null,
+        ageAttested === "true",
+        legalLocationAttested === "true",
+        walletScreening === "blocked" ? "blocked" : walletScreening === "clear" ? "clear" : "unchecked",
       ),
     };
   }

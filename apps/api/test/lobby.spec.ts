@@ -14,6 +14,31 @@ const defaultSettings: RoomSettingsDto = {
   actionTimerSeconds: 30,
 };
 
+function defaultLaunchStage() {
+  return {
+    testnetStatus: "pending" as const,
+    closedAlphaEnabled: false,
+    auditStatus: "pending" as const,
+    legalReviewStatus: "pending" as const,
+    monitoringStatus: "pending" as const,
+    emergencyControlsStatus: "pending" as const,
+    trustDisclosuresStatus: "pending" as const,
+    supportEvidenceStatus: "pending" as const,
+    excludedFeatures: ["tournaments", "multi-table-play", "fiat-ramps", "token-swaps", "referrals", "rake"],
+    currentStage: "testnet" as const,
+    publicLaunchBlockedReasons: [
+      "Closed alpha feature flag must be enabled before public launch.",
+      "Base Sepolia stability must be marked stable before public launch.",
+      "External audit remediation must be complete before public launch.",
+      "Legal review must be complete before public launch.",
+      "Monitoring and anomaly alerts must be ready before public launch.",
+      "Pause, Settlement Frozen, and Emergency Exit controls must be ready before public launch.",
+      "Trust-model disclosures must be ready before public launch.",
+      "Support evidence and rollback procedures must be ready before public launch.",
+    ],
+  };
+}
+
 describe("Room Host private Room flow", () => {
   it("lets a Player create one private Room with a distinct Invite Link and exactly one Table", async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -44,6 +69,7 @@ describe("Room Host private Room flow", () => {
             publicAccess: "closed-alpha",
             screeningMode: "require-clear",
           },
+          launch: defaultLaunchStage(),
         },
       });
       expect(created.body.room.hostPlayerId).toBeTruthy();
@@ -109,6 +135,7 @@ describe("Blockchain-backed Room creation and wallet preflight", () => {
           publicAccess: "closed-alpha",
           screeningMode: "require-clear",
         },
+        launch: defaultLaunchStage(),
       });
 
       await request(server)

@@ -32,3 +32,5 @@ Convert an **Escrowed Buy-In** into **Locked Escrow** before seating the Player,
 - 2026-05-02: https://github.com/bilyuk/cryptopoker/pull/10
   QA follow-up for CRY-151 blocker: added explicit automated lock-before-seat assertions in `apps/api/test/table-lobby.spec.ts` proving pre-lock state (`seat.playerId === null` and `seat.tableStack === null`) and post-lock transition (`status === escrow-locked`, seat assigned, stack allocated). The transition test name is now `enforces lock-before-seat transition for blockchain-backed Buy-Ins`.
   Validation rerun: `pnpm --filter @cryptopoker/api exec vitest run test/table-lobby.spec.ts` (pass).
+- 2026-05-02: https://github.com/bilyuk/cryptopoker/pull/10
+  Re-review request to QA (`CRY-151`): lock-before-seat proof is now explicit in test code at `apps/api/test/table-lobby.spec.ts` around the pre-lock assertions (`seat.playerId` + `seat.tableStack` remain null) and post-lock assertions (Buy-In becomes `escrow-locked`, Seat assigned, stack allocated). This directly covers the ADR-required transition sequence in one automated flow.

@@ -26,3 +26,16 @@ Supersede the Host-Verified Buy-In decision with a new ADR and lay the technical
 - `packages/contracts/src/`
 - `apps/api/src/`
 
+
+## Comments
+
+### 2026-05-02 - Engineer update
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Implemented CRY-125 escrow foundation: added ADR-0013 superseding ADR-0002 with Base + native USDC custody decision and signer/key/indexer plan; updated CONTEXT vocabulary for escrow-enabled Rooms; added escrow funding/payout/refund/reconciliation DTOs and lifecycle states in shared contracts; introduced API escrow module boundary with a foundation endpoint and durable ledger schema proposal entity; and scaffolded `@cryptopoker/escrow-contracts` with deployment config, ABI generation, and test scaffolding.
+
+Validation run:
+- `pnpm -w typecheck`
+- `pnpm -w test`
+
+CI status: no required checks reported on this branch at PR creation time.

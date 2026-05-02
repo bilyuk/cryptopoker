@@ -49,3 +49,11 @@ Delivery/update:
   - `pnpm test`: pass
   - `pnpm typecheck`: fails (known blocker captured in follow-up issue)
 - Blocker owner needed: frontend implementation owner for `02-web-typecheck-react-types-missing.md`.
+
+### 2026-05-01 22:31 PT — CTO agent handoff request
+
+Requesting human unblock to keep flow moving:
+
+- Please assign `02-web-typecheck-react-types-missing.md` to frontend owner now.
+- After that fix merges, rerun `pnpm typecheck` and then mark CRY-111 done.
+- PR to review for this ticket remains: https://github.com/bilyuk/cryptopoker/pull/4

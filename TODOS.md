@@ -79,3 +79,28 @@ Issues deferred from the Velvet Room redesign (`/plan-eng-review`, 2026-05-01).
 **Context:** Discovered during /investigate on 2026-05-02 while verifying the Velvet Room redesign in the browser. Realtime works in `apps/api/test/realtime.spec.ts` (passes). Realtime works in a stable dev session (verified live: triggered buy-in via curl while host watched the FE, pending banner appeared without reload; after Approve, seat filled without reload). Issue only manifests after a tsx-watch restart.
 
 **Depends on / blocked by:** None.
+
+---
+
+## Test seam for the WS subscription wiring in `use-room-client`
+
+**What:** The `useEffect` block in `apps/web/lib/use-room-client.ts:74` that creates a Socket.IO connection, sends `room.subscribe`, and wires `room.updated` into `setRooms` has no direct test coverage. The recent /diagnose run found a real bug there (WS subscribed during invite preview, before the Player had joined; subscribe ack failed; effect never re-ran after the actual join). The pure-function helper `isCurrentPlayerInRoom` was added with unit tests covering preview/joined/missing-playerId, but the wiring itself — "subscribe at the right transition, deliver `room.updated` into FE state" — is still untested.
+
+**Why:** WS bugs in this layer are silent (no error in tests, no error in console, just stale UI). The next regression in this area will be invisible to CI until a human notices the FE doesn't update. Two such bugs in one redesign cycle (this one and the dev-loop session-eviction recovery, see above) suggests the layer needs a test seam.
+
+**Pros:**
+- Catches WS wiring regressions in CI instead of by reload-or-not vibes during dogfooding.
+- Forces the wiring into a shape that can be tested (good architectural pressure).
+- Pairs well with the dev-loop WS recovery TODO above; once both are addressed, the realtime story is bulletproof.
+
+**Cons:**
+- React-hook testing isn't trivial — needs `@testing-library/react` (already a dep), a fake Socket.IO client, and time to write the tests.
+- Pure refactor, no user-visible win. Easy to defer indefinitely.
+
+**Two reasonable approaches:**
+1. **Hook test with a fake socket.** Use `@testing-library/react` `renderHook` to mount `useRoomClient` against a fake `io()` factory. Drive the lifecycle: render with empty `selectedRoom`, then mutate the room (preview → join), and assert socket.emit was called with the right roomId only after the join transition. Closer to the actual code but harder to set up.
+2. **Extract the WS layer to a non-React module.** Pull the socket creation, subscribe, and `room.updated → onRoomUpdated(callback)` into a plain TypeScript module that takes inputs (roomId, playerId, isMember) and emits state changes via callback. Test it directly. The hook becomes a thin adapter. More refactor, easier to test, easier to swap transports later.
+
+**Context:** Discovered during /diagnose on 2026-05-02 (commit `7b55af9`) after fixing the preview-subscribe bug. The fix is correct and the helper is unit-tested, but the wiring itself remains a blind spot.
+
+**Depends on / blocked by:** None. Independent. Pairs naturally with the dev-loop WS recovery TODO — both rewrite the WS layer.

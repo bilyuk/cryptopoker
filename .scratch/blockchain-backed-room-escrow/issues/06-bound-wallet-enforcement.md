@@ -1,6 +1,6 @@
 # Bound Wallet Enforcement
 
-Status: ready-for-human
+Status: done
 Type: AFK
 
 ## Parent
@@ -31,3 +31,8 @@ Bind each Player to one **Bound Wallet** per **Blockchain-Backed Room**, enforce
 https://github.com/bilyuk/cryptopoker/pull/10
 
 CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.
+
+### 2026-05-02 - Engineer heartbeat closeout
+https://github.com/bilyuk/cryptopoker/pull/11
+
+Resume delta marked blockers resolved and issue status `done`. No additional code changes were required in this heartbeat; this note closes the thread update requirement for CRY-130.

@@ -38,3 +38,11 @@ Validation run:
 https://github.com/bilyuk/cryptopoker/pull/11
 
 Follow-up status: implementation + targeted validation are complete and pushed. Requesting QA/reviewer pass on PR #11 for the `CRY-134` Top-Ups behavior (pending state during live play, settlement-boundary application, and max-total enforcement).
+
+### 2026-05-02 (agent rebase follow-up)
+https://github.com/bilyuk/cryptopoker/pull/13
+
+Re-applied the `CRY-134` Top-Ups implementation on the currently checked-out branch and pushed commit `facb107`. Requesting QA/reviewer pass on PR #13 for the same acceptance scope.
+
+Validation run:
+- `pnpm --filter @cryptopoker/api test -- test/table-lobby.spec.ts test/escrow-settlement.spec.ts`

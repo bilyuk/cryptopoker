@@ -39,6 +39,11 @@ describe("Room Host private Room flow", () => {
           maxTotalBuyIn: defaultSettings.buyInMax,
           antiRatholing: true,
           noRake: true,
+          compliance: {
+            allowedJurisdictions: ["US-CA"],
+            publicAccess: "closed-alpha",
+            screeningMode: "require-clear",
+          },
         },
       });
       expect(created.body.room.hostPlayerId).toBeTruthy();
@@ -77,7 +82,18 @@ describe("Blockchain-backed Room creation and wallet preflight", () => {
         .send({
           ...defaultSettings,
           mode: "blockchain-backed",
-          blockchain: { network: "base", stablecoin: "USDC", maxTotalBuyIn: 800, antiRatholing: true, noRake: true },
+          blockchain: {
+            network: "base",
+            stablecoin: "USDC",
+            maxTotalBuyIn: 800,
+            antiRatholing: true,
+            noRake: true,
+            compliance: {
+              allowedJurisdictions: ["US-CA", "US-NY"],
+              publicAccess: "closed-alpha",
+              screeningMode: "require-clear",
+            },
+          },
         })
         .expect(201);
 
@@ -88,10 +104,15 @@ describe("Blockchain-backed Room creation and wallet preflight", () => {
         maxTotalBuyIn: 800,
         antiRatholing: true,
         noRake: true,
+        compliance: {
+          allowedJurisdictions: ["US-CA", "US-NY"],
+          publicAccess: "closed-alpha",
+          screeningMode: "require-clear",
+        },
       });
 
       await request(server)
-        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC`)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=true&walletScreening=clear`)
         .set("Cookie", hostCookie)
         .expect(200)
         .expect(({ body }) => {
@@ -104,19 +125,43 @@ describe("Blockchain-backed Room creation and wallet preflight", () => {
       await request(server).post("/players/current/wallet").set("Cookie", hostCookie).send({}).expect(201);
 
       await request(server)
-        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=other&connectedStablecoin=USDC`)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=other&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=true&walletScreening=clear`)
         .set("Cookie", hostCookie)
         .expect(200)
         .expect(({ body }) => expect(body.preflight.status).toBe("wrong-chain"));
 
       await request(server)
-        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=other`)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=other&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=true&walletScreening=clear`)
         .set("Cookie", hostCookie)
         .expect(200)
         .expect(({ body }) => expect(body.preflight.status).toBe("unsupported-token"));
 
       await request(server)
-        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC`)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-TX&ageAttested=true&legalLocationAttested=true&walletScreening=clear`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("jurisdiction-blocked"));
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=false&legalLocationAttested=true&walletScreening=clear`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("age-attestation-required"));
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=false&walletScreening=clear`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("location-attestation-required"));
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=true&walletScreening=blocked`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("wallet-screening-blocked"));
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=true&walletScreening=clear`)
         .set("Cookie", hostCookie)
         .expect(200)
         .expect(({ body }) => {
@@ -149,6 +194,64 @@ describe("Blockchain-backed Room creation and wallet preflight", () => {
 
       expect(created.body.room.settings.mode).toBe("host-verified");
       expect(created.body.room.settings.blockchain).toBeNull();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("blocks funding when legal review keeps public access disabled and enforces no-rake", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+      const hostCookie = await createPlayer(server, "host");
+
+      const created = await request(server)
+        .post("/rooms")
+        .set("Cookie", hostCookie)
+        .send({
+          ...defaultSettings,
+          mode: "blockchain-backed",
+          blockchain: {
+            network: "base",
+            stablecoin: "USDC",
+            maxTotalBuyIn: 800,
+            antiRatholing: true,
+            noRake: true,
+            compliance: {
+              allowedJurisdictions: ["US-CA"],
+              publicAccess: "public-disabled",
+              screeningMode: "require-clear",
+            },
+          },
+        })
+        .expect(201);
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC&jurisdiction=US-CA&ageAttested=true&legalLocationAttested=true&walletScreening=clear`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("launch-disabled"));
+
+      await request(server)
+        .post("/rooms")
+        .set("Cookie", await createPlayer(server, "host2"))
+        .send({
+          ...defaultSettings,
+          name: "Bad Rake",
+          mode: "blockchain-backed",
+          blockchain: {
+            network: "base",
+            stablecoin: "USDC",
+            maxTotalBuyIn: 800,
+            antiRatholing: true,
+            noRake: false,
+          },
+        })
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("RAKE_FORBIDDEN"));
     } finally {
       await app.close();
     }

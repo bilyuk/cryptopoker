@@ -20,6 +20,26 @@ export type RoomSettingsDto = {
       publicAccess: "closed-alpha" | "public-disabled" | "public-enabled";
       screeningMode: "allow-unchecked" | "require-clear";
     };
+    launch?: {
+      testnetStatus: "pending" | "stable";
+      closedAlphaEnabled: boolean;
+      auditStatus: "pending" | "complete";
+      legalReviewStatus: "pending" | "complete";
+      monitoringStatus: "pending" | "ready";
+      emergencyControlsStatus: "pending" | "ready";
+      trustDisclosuresStatus: "pending" | "ready";
+      supportEvidenceStatus: "pending" | "ready";
+      excludedFeatures: (
+        | "tournaments"
+        | "multi-table-play"
+        | "fiat-ramps"
+        | "token-swaps"
+        | "referrals"
+        | "rake"
+      )[];
+      currentStage: "testnet" | "closed-alpha" | "public-launch";
+      publicLaunchBlockedReasons: string[];
+    };
   } | null;
 };
 

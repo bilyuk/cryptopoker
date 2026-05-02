@@ -264,19 +264,21 @@ export function useRoomClient() {
   }
 
   const requestBuyIn = async (amount: number) => {
+    const params = new URLSearchParams({
+      connectedNetwork: "base",
+      connectedStablecoin: "USDC",
+      jurisdiction: "US-CA",
+      ageAttested: "true",
+      legalLocationAttested: "true",
+      walletScreening: "clear",
+    });
     const preflightResponse = await apiFetch(
-      `/rooms/${selectedRoom.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC`,
+      `/rooms/${selectedRoom.id}/wallet-preflight?${params.toString()}`,
     );
     if (!preflightResponse.ok) return;
     const preflight = (await preflightResponse.json()) as WalletPreflightResponse;
     if (!preflight.preflight.fundingAllowed) {
-      setInviteActionMessage(
-        preflight.preflight.status === "wallet-required"
-          ? "Connect a wallet before funding this Blockchain-Backed Room."
-          : preflight.preflight.status === "wrong-chain"
-            ? "Switch your Connected Wallet to Base before funding."
-            : "Use native USDC before funding this Blockchain-Backed Room.",
-      );
+      setInviteActionMessage(preflight.preflight.blockedReason ?? "Funding is currently blocked by room policy.");
       return;
     }
     await runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount });

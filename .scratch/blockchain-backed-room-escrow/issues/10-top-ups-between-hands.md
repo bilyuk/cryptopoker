@@ -30,3 +30,8 @@ Top-Ups between hands implemented in API with max-total enforcement and hand-bou
 
 Validation run:
 - `pnpm --filter @cryptopoker/api test -- test/table-lobby.spec.ts test/escrow-settlement.spec.ts`
+
+### 2026-05-02 (agent dedicated PR)
+https://github.com/bilyuk/cryptopoker/pull/15
+
+Created a dedicated `CRY-134` branch/PR (`feat/cry-134-top-ups`) so Top-Ups can be reviewed independently from unrelated feature branches. Requesting QA/reviewer pass on PR #15.

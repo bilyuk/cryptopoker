@@ -1,0 +1,13 @@
+{
+  "name": "@cryptopoker/escrow-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/validate-workspace.mjs",
+    "typecheck": "node ./scripts/validate-workspace.mjs",
+    "test": "node --test ./test/*.test.mjs",
+    "abi:generate": "node ./scripts/generate-abi-stubs.mjs",
+    "deploy:base-sepolia": "node ./scripts/print-deploy-plan.mjs base-sepolia"
+  }
+}

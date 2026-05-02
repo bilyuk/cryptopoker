@@ -1,12 +1,12 @@
 # Cryptopoker
 
-Cryptopoker is a private-table poker experience with dollar-denominated table chips, browser-persistent guest identity, and no in-app custody in version 1. The context exists to define the language around guest players, rooms, seats, buy-ins, and server-authoritative poker play.
+Cryptopoker is a private-table poker experience with dollar-denominated table chips, browser-persistent guest identity, and server-authoritative poker play. Version 1 uses Host-Verified Buy-Ins with no in-app custody, while escrow-enabled Rooms use onchain escrow funding and payout states.
 
 ## Language
 
 **Player**:
-A person participating in poker through a browser-persistent guest identity, without implying an account or wallet.
-_Avoid_: Account, user, wallet
+A person participating in poker through a browser-persistent guest identity, without implying an account.
+_Avoid_: Account, user
 
 **Display Name**:
 A table-visible label chosen by a **Player**.
@@ -37,7 +37,7 @@ A temporary opportunity for a waitlisted **Player** to claim an open **Seat**.
 _Avoid_: Reservation when the seat has not been accepted
 
 **Room Host**:
-The **Player** who creates a **Room** and verifies buy-ins for that **Room** in version 1.
+The **Player** who creates a **Room** and verifies buy-ins for Host-Verified flows in version 1.
 _Avoid_: Escrow provider, banker
 
 **Hand**:
@@ -78,11 +78,19 @@ _Avoid_: Tournament, Omaha, limit poker
 
 **Buy-In**:
 The dollar-denominated amount a **Player** requests to convert into a **Table** stack.
-_Avoid_: Deposit, wallet balance
+_Avoid_: Wallet balance
 
 **Host-Verified Buy-In**:
-A **Buy-In** approved by the **Room Host** after payment is handled outside the app.
-_Avoid_: Escrow, in-app payment
+A **Buy-In** approved by the **Room Host** after payment is handled outside the app in version 1.
+_Avoid_: Escrow-funded buy-in
+
+**Escrow Funding**:
+A **Buy-In** lifecycle where funds move into Room escrow and are reconciled before seating eligibility.
+_Avoid_: Host verification
+
+**Escrow Funding State**:
+Funding lifecycle state values: `funding-pending`, `escrow-funded`, `in-play`, `payout-pending`, `paid-out`, `refund-pending`, `refunded`.
+_Avoid_: Generic verified/unverified labels
 
 **Table Stack**:
 The dollar-denominated chips a seated **Player** has available at the **Table**.
@@ -106,11 +114,13 @@ _Avoid_: Bankroll, wallet balance
 - A **Table** has a fixed number of **Seats**
 - A **Seat** is occupied by at most one **Player**
 - A **Waitlist** belongs to exactly one **Room**
-- A **Player** may be on the **Waitlist** only when they have a **Host-Verified Buy-In** and do not occupy a **Seat** in that **Room**
+- A **Player** may be on the **Waitlist** only when they have seating-eligible **Buy-In** state and do not occupy a **Seat** in that **Room**
 - A **Seat Offer** is made to the first eligible **Player** on the **Waitlist** when a **Seat** opens
 - A **Seat Offer** must be accepted before the **Player** occupies the **Seat**
-- A **Buy-In** must become a **Host-Verified Buy-In** before it creates a **Table Stack**
-- A **Player** must have a **Host-Verified Buy-In** before occupying a **Seat**
+- A **Buy-In** must reach seating-eligible state before it creates a **Table Stack**
+- A **Player** must have seating-eligible **Buy-In** state before occupying a **Seat**
+- Host-Verified Rooms use **Host-Verified Buy-In** for seating eligibility
+- Escrow-enabled Rooms use **Escrow Funding State** (`escrow-funded` or `in-play`) for seating eligibility
 - A **Table Stack** exists only inside one **Room**
 - A **Room Host** may remove a **Player** only outside a **Live Hand**
 - A **Room Host** may not change cards, force another **Player**'s live action, or edit **Table Stacks** during a **Live Hand**
@@ -120,7 +130,7 @@ _Avoid_: Bankroll, wallet balance
 - A disconnected **Player** may become **Sitting Out** after the **Live Hand** ends
 - A seated **Player** may choose **Sitting Out** for future **Hands**, but not to escape a **Live Hand**
 - The first **Hand** starts when the **Room Host** starts it with at least two seated **Players** who are not **Sitting Out**
-- Later **Hands** start automatically after a short intermission unless the **Table** is **Dealing Paused** or has fewer than two eligible **Players**
+- Later **Hands** start automatically after a short intermission unless the **Table** is **Dealing Paused** or has fewer than two eligible **Players** remain
 - A **Room Host** may set **Dealing Paused** only between **Hands**
 - A **Room Host** may close a **Room** between **Hands**
 - A close request during a **Live Hand** closes the **Room** after that **Hand** settles
@@ -157,11 +167,8 @@ _Avoid_: Bankroll, wallet balance
 > **Dev:** "If a **Seat** opens, do we immediately put the first waitlisted **Player** in it?"
 > **Domain expert:** "No. We create a **Seat Offer** first; the **Player** must accept before becoming seated."
 >
-> **Dev:** "Does the app escrow a **Buy-In**?"
-> **Domain expert:** "No. In version 1, payment is handled outside the app and the **Room Host** approves a **Host-Verified Buy-In**."
->
-> **Dev:** "Can an invited **Player** take an open **Seat** before the **Room Host** verifies their **Buy-In**?"
-> **Domain expert:** "No. Host verification comes before seating or waitlisting."
+> **Dev:** "Can an escrow-enabled Room seat a Player before funds confirm?"
+> **Domain expert:** "No. Escrow-enabled Rooms require `escrow-funded` before seating or waitlisting."
 >
 > **Dev:** "Can the **Room Host** kick a **Player** during a pot?"
 > **Domain expert:** "No. Host powers apply around play; they must not alter a **Live Hand**."
@@ -191,4 +198,4 @@ _Avoid_: Bankroll, wallet balance
 - "room" and "table" were used interchangeably in early UI copy; resolved: a **Room** is the inviteable space, and a **Table** is the poker surface inside it.
 - "invite link" must not be treated as a public **Room** ID; it is the access mechanism for a private **Room**.
 - "waitlist" does not mean spectators or viewers; waitlisted **Players** are waiting for a **Seat** and cannot spectate the **Table**.
-- "escrow" is avoided in version 1 because the app does not custody funds; the canonical term is **Host-Verified Buy-In**.
+- "host-verified" is specific to version 1 buy-in handling; escrow-enabled Rooms use **Escrow Funding State** instead.

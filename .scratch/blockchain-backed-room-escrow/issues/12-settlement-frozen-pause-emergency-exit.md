@@ -46,3 +46,8 @@ Requesting QA review for settlement failsafe coverage on this PR, focused on:
 - freeze/resume timing and emergency-exit delay behavior
 - pause intersections (funding blocked, refund/payout/emergency path open)
 - closed-room zero-liability terminal rule
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

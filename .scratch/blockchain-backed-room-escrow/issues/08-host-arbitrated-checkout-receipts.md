@@ -1,6 +1,6 @@
 # Host-Arbitrated Checkout and Receipts
 
-Status: in_progress
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -32,3 +32,8 @@ Add **Checkout** for blockchain-backed Players: request checkout in the app, wai
   2026-05-02 (agent): Implemented host-arbitrated checkout request/finalize APIs with live-hand deferral (`deferred` -> `queued`), per-room nonce replay protection, bound-wallet payout enforcement, and receipt payload including payout amount, signer role, tx hash, nonce, and trust-model disclosure copy. Added integration tests in `apps/api/test/escrow-checkout.spec.ts`; validation run passed: `pnpm --filter @cryptopoker/api test -- escrow-checkout.spec.ts escrow-delegation.spec.ts escrow-settlement.spec.ts`.
 - https://github.com/bilyuk/cryptopoker/pull/11
   2026-05-02 (agent): Continuation update. PR body includes required Paperclip issue URL (`http://100.109.115.109:3100/CRY/issues/CRY-132`). Blocker to move to `in_review`: `gh pr checks 11` reports no checks configured for the branch, so CI-green gate cannot be verified from this environment. Requested owner action: maintainer confirmation on CI policy for this PR.
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

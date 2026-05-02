@@ -81,3 +81,8 @@ Status sync heartbeat: CRY-126 implementation and QA-evidence follow-up are comp
 https://github.com/bilyuk/cryptopoker/pull/10
 
 No new implementation gaps remain for CRY-126 in this heartbeat. Branch `plan/cry-120-blockchain-room-escrow` contains the merged contract/UI/test evidence requested by QA, and PR #10 is merged. Awaiting human workflow/status transition from `in_progress`.
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

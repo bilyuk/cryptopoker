@@ -1,6 +1,6 @@
 # Funded Awaiting Seat and Waitlist Integration
 
-Status: needs-info
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -77,3 +77,8 @@ Attempted to reconcile `plan/cry-120-blockchain-room-escrow` with `origin/main` 
 Merge was safely aborted (`git merge --abort`) to avoid landing accidental regressions.
 
 Unblock request: branch owner/release owner should define a coordinated integration order (or provide a refreshed issue-scoped branch) before CRY-129 can be finalized on this branch.
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

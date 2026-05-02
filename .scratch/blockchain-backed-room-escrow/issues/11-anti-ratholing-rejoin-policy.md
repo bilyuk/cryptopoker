@@ -1,6 +1,6 @@
 # Anti-Ratholing Rejoin Policy
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -31,3 +31,10 @@ https://github.com/bilyuk/cryptopoker/pull/11
 Tried to split CRY-135 into a clean `main`-based branch, but `origin/main` is behind the current escrow/lobby stack (hard cherry-pick conflicts, including files deleted on `main` that this change must modify). Keeping this ticket on PR #11 to preserve a valid build/test base.
 
 Blocking owner: repo maintainers to confirm whether `main` should be fast-forwarded to the current integration baseline, or whether CRY-135 should intentionally stay on this active feature stream.
+
+## Comments
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

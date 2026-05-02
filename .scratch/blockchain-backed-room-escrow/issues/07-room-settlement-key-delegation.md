@@ -1,6 +1,6 @@
 # Room Settlement Key Delegation
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -24,3 +24,10 @@ Let a Room Host delegate a scoped **Room Settlement Key** for one **Blockchain-B
 
 - [04 - Lock-Before-Seat Escrow Seating](04-lock-before-seat-escrow-seating.md)
 - 2026-05-02 (follow-up): Requesting QA/human review on https://github.com/bilyuk/cryptopoker/pull/11 for CRY-131 scope. Delegation register/revoke/authorize paths and invalid signer/domain/scope tests are in place; API tests pass locally via `pnpm --filter @cryptopoker/api test`.
+
+## Comments
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

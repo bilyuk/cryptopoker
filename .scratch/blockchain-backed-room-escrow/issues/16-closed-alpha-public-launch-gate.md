@@ -1,6 +1,6 @@
 # Closed Alpha and Public Launch Gate
 
-Status: needs-triage
+Status: ready-for-human
 Type: HITL
 
 ## Parent
@@ -37,3 +37,10 @@ Create the release gate for moving from Base Sepolia testnet to Base mainnet clo
 - [13 - Solvency Replay and Monitoring](13-solvency-replay-monitoring.md)
 - [14 - Smart Wallet Compatibility Hardening](14-smart-wallet-compatibility-hardening.md)
 - [15 - Compliance Gates and No-Rake Launch Controls](15-compliance-gates-no-rake-launch-controls.md)
+
+## Comments
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

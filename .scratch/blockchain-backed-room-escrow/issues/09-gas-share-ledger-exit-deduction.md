@@ -1,6 +1,6 @@
 # Gas Share Ledger and Exit Deduction
 
-Status: needs-triage
+Status: ready-for-human
 Type: AFK
 
 ## Parent
@@ -33,3 +33,10 @@ Followed up unblock request: posted on the PR for repository maintainer + QA. Bl
 Requested actions:
 - QA owner: run manual verification for checkout/refund/payout gas-share deduction behavior on this PR head.
 - Repo maintainer owner: enable/attach required CI checks to this branch so the ticket can advance.
+
+## Comments
+
+### 2026-05-02 - Engineer update (status normalization)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

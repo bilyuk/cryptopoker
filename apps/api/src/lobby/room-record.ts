@@ -21,9 +21,26 @@ export function normalizeRoomSettings(settings: RoomSettingsDto): RoomSettingsDt
     throw new BadRequestException({ code: "INVALID_ACTION_TIMER", message: "Action timer must be at least 10 seconds." });
   }
 
+  const mode = settings.mode ?? "blockchain-backed";
+  if (mode !== "host-verified" && mode !== "blockchain-backed") {
+    throw new BadRequestException({ code: "INVALID_ROOM_MODE", message: "Room mode must be host-verified or blockchain-backed." });
+  }
+
+  const blockchain = mode === "blockchain-backed"
+    ? {
+        network: "base" as const,
+        stablecoin: "USDC" as const,
+        maxTotalBuyIn: Math.max(settings.buyInMax, settings.blockchain?.maxTotalBuyIn ?? settings.buyInMax),
+        antiRatholing: settings.blockchain?.antiRatholing ?? true,
+        noRake: settings.blockchain?.noRake ?? true,
+      }
+    : null;
+
   return {
     ...settings,
     name: settings.name.trim(),
+    mode,
+    blockchain,
   };
 }
 

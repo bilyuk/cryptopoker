@@ -18,6 +18,7 @@ type CreateRoomScreenProps = {
 export function CreateRoomScreen({ playerName, onCancel, onCreate, onSignOut }: CreateRoomScreenProps) {
   const [values, setValues] = useState<CreateRoomValues>({
     name: "The Velvet Room",
+    mode: "host-verified",
     blinds: "$1/$2",
     buyInMin: "$40",
     buyInMax: "$200",
@@ -42,6 +43,12 @@ export function CreateRoomScreen({ playerName, onCancel, onCreate, onSignOut }: 
           <p className="text-xs font-semibold uppercase tracking-[0.55em] text-champagne-500">Start a table</p>
           <h2 className="mt-3 font-display text-5xl leading-none text-ivory-50">Make it private.</h2>
           <p className="mt-4 text-sm text-ivory-100">Pick the feel of the room. Everyone joins by invite link only.</p>
+          <Field label="Room mode">
+            <select className="aurum-input" value={values.mode} onChange={(event) => update("mode", event.target.value as CreateRoomValues["mode"])}>
+              <option value="host-verified">Host-Verified Buy-In</option>
+              <option value="blockchain-backed">Blockchain-Backed Room (Base + USDC, no rake)</option>
+            </select>
+          </Field>
           <Field label="Room name">
             <input
               className="aurum-input"
@@ -80,7 +87,11 @@ export function CreateRoomScreen({ playerName, onCancel, onCreate, onSignOut }: 
               />
             </Field>
           </div>
-          <p className="mt-9 text-xs text-sapphire-400">A private invite link is generated after you create the room. Share it with anyone you want at your table.</p>
+          <p className="mt-9 text-xs text-sapphire-400">
+            {values.mode === "blockchain-backed"
+              ? "Blockchain-Backed Rooms use Connected Wallet and Bound Wallet preflight on Base with native USDC. No platform rake."
+              : "A private invite link is generated after you create the room. Share it with anyone you want at your table."}
+          </p>
           <div className="mt-7 grid gap-3 sm:grid-cols-[0.9fr_1.5fr] md:ml-auto md:max-w-sm">
             <AurumButton type="button" variant="ghost" onClick={onCancel}>
               Cancel

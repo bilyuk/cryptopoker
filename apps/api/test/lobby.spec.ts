@@ -30,7 +30,17 @@ describe("Room Host private Room flow", () => {
         .send(defaultSettings)
         .expect(201);
 
-      expect(created.body.room.settings).toEqual(defaultSettings);
+      expect(created.body.room.settings).toEqual({
+        ...defaultSettings,
+        mode: "blockchain-backed",
+        blockchain: {
+          network: "base",
+          stablecoin: "USDC",
+          maxTotalBuyIn: defaultSettings.buyInMax,
+          antiRatholing: true,
+          noRake: true,
+        },
+      });
       expect(created.body.room.hostPlayerId).toBeTruthy();
       expect(created.body.room.tableId).toBeTruthy();
       expect(created.body.room.tableId).not.toBe(created.body.room.id);
@@ -45,6 +55,100 @@ describe("Room Host private Room flow", () => {
         .send({ ...defaultSettings, name: "Second Room" })
         .expect(400)
         .expect(({ body }) => expect(body.code).toBe("ONE_ACTIVE_ROOM"));
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("Blockchain-backed Room creation and wallet preflight", () => {
+  it("creates blockchain-backed Rooms with Base/native USDC policy and reports wallet preflight states", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+      const hostCookie = await createPlayer(server, "host");
+
+      const created = await request(server)
+        .post("/rooms")
+        .set("Cookie", hostCookie)
+        .send({
+          ...defaultSettings,
+          mode: "blockchain-backed",
+          blockchain: { network: "base", stablecoin: "USDC", maxTotalBuyIn: 800, antiRatholing: true, noRake: true },
+        })
+        .expect(201);
+
+      expect(created.body.room.settings.mode).toBe("blockchain-backed");
+      expect(created.body.room.settings.blockchain).toEqual({
+        network: "base",
+        stablecoin: "USDC",
+        maxTotalBuyIn: 800,
+        antiRatholing: true,
+        noRake: true,
+      });
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body.preflight.status).toBe("wallet-required");
+          expect(body.preflight.fundingAllowed).toBe(false);
+          expect(body.preflight.requiredNetwork).toBe("base");
+          expect(body.preflight.requiredStablecoin).toBe("USDC");
+        });
+
+      await request(server).post("/players/current/wallet").set("Cookie", hostCookie).send({}).expect(201);
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=other&connectedStablecoin=USDC`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("wrong-chain"));
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=other`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => expect(body.preflight.status).toBe("unsupported-token"));
+
+      await request(server)
+        .get(`/rooms/${created.body.room.id}/wallet-preflight?connectedNetwork=base&connectedStablecoin=USDC`)
+        .set("Cookie", hostCookie)
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body.preflight.status).toBe("ready");
+          expect(body.preflight.fundingAllowed).toBe(true);
+          expect(body.preflight.noRake).toBe(true);
+        });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("still supports explicit Host-Verified Buy-In Room creation", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+      const hostCookie = await createPlayer(server, "host");
+
+      const created = await request(server)
+        .post("/rooms")
+        .set("Cookie", hostCookie)
+        .send({
+          ...defaultSettings,
+          mode: "host-verified",
+        })
+        .expect(201);
+
+      expect(created.body.room.settings.mode).toBe("host-verified");
+      expect(created.body.room.settings.blockchain).toBeNull();
     } finally {
       await app.close();
     }

@@ -27,3 +27,7 @@ Category: bug
 - Align web app type dependencies with current React/Next versions.
 - Add missing type packages if needed (`@types/react`, `@types/react-dom`).
 - Re-run `pnpm typecheck` at workspace root.
+
+## Comments
+
+- 2026-05-01 (agent): Started CRY-112. Reproducing `pnpm typecheck` failure in `@cryptopoker/web` and preparing dependency/type fix.

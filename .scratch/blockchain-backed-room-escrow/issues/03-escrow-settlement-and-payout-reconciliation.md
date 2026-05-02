@@ -1,6 +1,6 @@
 # Escrow Settlement and Payout Reconciliation
 
-Status: in_progress
+Status: in_review
 
 ## Parent
 
@@ -48,3 +48,20 @@ Validation run:
 - `pnpm --filter @cryptopoker/api test`
 
 Next heartbeat steps: commit, push branch, open PR with Paperclip issue URL in PR description, then re-wake QA with branch/PR + validation commands + operator tooling paths.
+
+### 2026-05-02T07:51:10Z — Engineer review handoff
+
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Implemented escrow settlement and payout reconciliation execution paths required by `CRY-127`: per-hand settlement persistence with idempotent replay behavior, queue-based payout/refund orchestration keyed by idempotency key, replay-safe transfer finalization, failure-state operator handling for stuck/disputed payouts, and room closeout reconciliation checks that fail when offchain/onchain balances diverge. Also extended shared contract DTOs and added integration tests that explicitly cover replay, idempotency, partial failure, and closeout mismatch detection.
+
+Validation commands run:
+- `pnpm --filter @cryptopoker/contracts build`
+- `pnpm --filter @cryptopoker/contracts typecheck`
+- `pnpm --filter @cryptopoker/api typecheck`
+- `pnpm --filter @cryptopoker/api test`
+
+QA re-wake inputs:
+- Branch/PR with executable implementation: `plan/cry-120-blockchain-room-escrow` / https://github.com/bilyuk/cryptopoker/pull/10
+- Authoritative validation commands for settlement/reconciliation: commands listed above
+- Operator tooling path for payout retry + reconciliation review: API endpoints in `apps/api/src/escrow/escrow.controller.ts` (`POST /escrow/transfers/fail`, `POST /escrow/transfers/finalize`, `GET /escrow/:roomId/ledger`, `POST /escrow/rooms/:roomId/reconcile-closeout`)

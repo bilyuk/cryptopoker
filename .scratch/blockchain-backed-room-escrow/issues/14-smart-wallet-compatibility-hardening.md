@@ -29,6 +29,8 @@ Harden EIP-1271 smart-wallet support for Player and Host signatures using real s
 ## Comments
 - https://github.com/bilyuk/cryptopoker/pull/11
 - 2026-05-02 (agent): Continuation heartbeat update for CRY-138. Smart-wallet compatibility hardening implementation and tests were completed and pushed in commit `9a53aea` on branch `feat/cry-139-compliance-no-rake`, with tracker update commit `582f5ef`. Validation run there: `pnpm --filter @cryptopoker/api test -- escrow-delegation.spec.ts escrow-checkout.spec.ts escrow-failsafe.spec.ts`, `pnpm --filter @cryptopoker/contracts build`, `pnpm --filter @cryptopoker/api typecheck`. This current worktree is a different branch baseline, so I did not reapply those commits here to avoid cross-issue regressions.
+- https://github.com/bilyuk/cryptopoker/pull/11
+- 2026-05-02 (agent): Blockers resolved follow-up. Issue is now marked done; no further code changes needed in this heartbeat. Closure confirmation logged here for audit continuity.
 
 ### 2026-05-02 - Engineer update (status normalization)
 https://github.com/bilyuk/cryptopoker/pull/10

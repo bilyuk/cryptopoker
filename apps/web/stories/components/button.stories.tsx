@@ -78,9 +78,8 @@ export const ButtonGroup: Story = {
         Create Room
       </AurumButton>
       <AurumButton variant="ghost">Leave Room</AurumButton>
-      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-champagne-500/15 bg-sapphire-950/60 p-1.5">
-        <AurumButton active variant="segment">Play as Guest</AurumButton>
-        <AurumButton variant="segment">Sign In</AurumButton>
+      <div className="grid gap-2 rounded-2xl border border-champagne-500/15 bg-sapphire-950/60 p-1.5">
+        <AurumButton active variant="segment">Guest Player</AurumButton>
       </div>
     </div>
   ),

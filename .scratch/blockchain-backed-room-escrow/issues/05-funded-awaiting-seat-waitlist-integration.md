@@ -1,6 +1,6 @@
 # Funded Awaiting Seat and Waitlist Integration
 
-Status: needs-triage
+Status: needs-info
 Type: AFK
 
 ## Parent
@@ -23,3 +23,14 @@ Integrate **Funded Awaiting Seat** Players into the existing Seat and Waitlist f
 ## Blocked by
 
 - [04 - Lock-Before-Seat Escrow Seating](04-lock-before-seat-escrow-seating.md)
+
+## Comments
+
+### 2026-05-02 — Heartbeat status sync
+https://github.com/bilyuk/cryptopoker/pull/12
+
+Checked PR/CI state after issue status change:
+- PR `#12` is open against `main` with head branch `plan/cry-120-blockchain-room-escrow`.
+- `gh pr checks 12` still reports `no checks reported` on that branch.
+
+Unblock needed from repo maintainer/CI owner: attach and run required checks for PR `#12` so this issue can move to `in_review` under PR-driven DoD.

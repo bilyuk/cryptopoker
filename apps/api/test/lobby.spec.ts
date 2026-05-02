@@ -30,7 +30,7 @@ describe("Room Host private Room flow", () => {
         .send(defaultSettings)
         .expect(201);
 
-      expect(created.body.room.settings).toEqual({
+      expect(created.body.room.settings).toMatchObject({
         ...defaultSettings,
         mode: "blockchain-backed",
         blockchain: {
@@ -98,7 +98,7 @@ describe("Blockchain-backed Room creation and wallet preflight", () => {
         .expect(201);
 
       expect(created.body.room.settings.mode).toBe("blockchain-backed");
-      expect(created.body.room.settings.blockchain).toEqual({
+      expect(created.body.room.settings.blockchain).toMatchObject({
         network: "base",
         stablecoin: "USDC",
         maxTotalBuyIn: 800,

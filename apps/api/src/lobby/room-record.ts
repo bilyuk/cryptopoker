@@ -36,7 +36,21 @@ export function normalizeRoomSettings(settings: RoomSettingsDto): RoomSettingsDt
   }
 
   const blockchain = mode === "blockchain-backed"
-    ? {
+    ? (() => {
+        const launch: NonNullable<NonNullable<RoomSettingsDto["blockchain"]>["launch"]> = {
+          testnetStatus: settings.blockchain?.launch?.testnetStatus ?? "pending",
+          closedAlphaEnabled: settings.blockchain?.launch?.closedAlphaEnabled ?? false,
+          auditStatus: settings.blockchain?.launch?.auditStatus ?? "pending",
+          legalReviewStatus: settings.blockchain?.launch?.legalReviewStatus ?? "pending",
+          monitoringStatus: settings.blockchain?.launch?.monitoringStatus ?? "pending",
+          emergencyControlsStatus: settings.blockchain?.launch?.emergencyControlsStatus ?? "pending",
+          trustDisclosuresStatus: settings.blockchain?.launch?.trustDisclosuresStatus ?? "pending",
+          supportEvidenceStatus: settings.blockchain?.launch?.supportEvidenceStatus ?? "pending",
+          excludedFeatures: [...EXCLUDED_PUBLIC_LAUNCH_FEATURES],
+          currentStage: "testnet",
+          publicLaunchBlockedReasons: [],
+        };
+        return {
         network: "base" as const,
         stablecoin: "USDC" as const,
         maxTotalBuyIn: Math.max(settings.buyInMax, settings.blockchain?.maxTotalBuyIn ?? settings.buyInMax),
@@ -49,20 +63,9 @@ export function normalizeRoomSettings(settings: RoomSettingsDto): RoomSettingsDt
           publicAccess: settings.blockchain?.compliance?.publicAccess ?? "closed-alpha",
           screeningMode: settings.blockchain?.compliance?.screeningMode ?? "require-clear",
         },
-        launch: {
-          testnetStatus: settings.blockchain?.launch?.testnetStatus ?? "pending",
-          closedAlphaEnabled: settings.blockchain?.launch?.closedAlphaEnabled ?? false,
-          auditStatus: settings.blockchain?.launch?.auditStatus ?? "pending",
-          legalReviewStatus: settings.blockchain?.launch?.legalReviewStatus ?? "pending",
-          monitoringStatus: settings.blockchain?.launch?.monitoringStatus ?? "pending",
-          emergencyControlsStatus: settings.blockchain?.launch?.emergencyControlsStatus ?? "pending",
-          trustDisclosuresStatus: settings.blockchain?.launch?.trustDisclosuresStatus ?? "pending",
-          supportEvidenceStatus: settings.blockchain?.launch?.supportEvidenceStatus ?? "pending",
-          excludedFeatures: [...EXCLUDED_PUBLIC_LAUNCH_FEATURES],
-          currentStage: "testnet" as const,
-          publicLaunchBlockedReasons: [],
-        },
-      }
+        launch,
+      };
+      })()
     : null;
 
   if (mode === "blockchain-backed" && settings.blockchain?.noRake === false) {

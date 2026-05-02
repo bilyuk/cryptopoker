@@ -206,9 +206,36 @@ export class LobbyStore {
     roomId: string,
     connectedNetwork: "base" | "other" | null,
     connectedStablecoin: "USDC" | "other" | null,
+    jurisdiction: string | null,
+    ageAttested: boolean,
+    legalLocationAttested: boolean,
+    walletScreening: "clear" | "blocked" | "unchecked",
   ): WalletPreflightResponse["preflight"] {
     const room = this.requireJoinedRoom(player, roomId);
     const mode = room.settings.mode ?? "host-verified";
+    const compliance = room.settings.blockchain?.compliance;
+    const noRake = room.settings.blockchain?.noRake ?? true;
+    const blocked = (
+      status: WalletPreflightResponse["preflight"]["status"],
+      blockedReason: string,
+    ): WalletPreflightResponse["preflight"] => ({
+      roomMode: mode,
+      connectedWalletAddress: player.walletAddress ?? null,
+      boundWalletAddress: player.walletAddress ?? null,
+      requiredNetwork: mode === "blockchain-backed" ? "base" : null,
+      requiredStablecoin: mode === "blockchain-backed" ? "USDC" : null,
+      connectedNetwork,
+      connectedStablecoin,
+      jurisdiction,
+      allowedJurisdictions: compliance?.allowedJurisdictions ?? [],
+      ageAttested,
+      legalLocationAttested,
+      trustModelDisclosureRequired: mode === "blockchain-backed",
+      status,
+      fundingAllowed: false,
+      noRake,
+      blockedReason,
+    });
     if (mode === "host-verified") {
       return {
         roomMode: mode,
@@ -218,53 +245,42 @@ export class LobbyStore {
         requiredStablecoin: null,
         connectedNetwork,
         connectedStablecoin,
+        jurisdiction,
+        allowedJurisdictions: [],
+        ageAttested,
+        legalLocationAttested,
+        trustModelDisclosureRequired: false,
         status: "ready",
         fundingAllowed: true,
         noRake: true,
+        blockedReason: null,
       };
     }
 
+    if (compliance?.publicAccess === "public-disabled") {
+      return blocked("launch-disabled", "Public access is disabled pending legal review.");
+    }
+    if (!jurisdiction || !(compliance?.allowedJurisdictions ?? []).includes(jurisdiction)) {
+      return blocked("jurisdiction-blocked", "This jurisdiction is not currently allow-listed.");
+    }
+    if (!ageAttested) {
+      return blocked("age-attestation-required", "Age attestation is required before funding.");
+    }
+    if (!legalLocationAttested) {
+      return blocked("location-attestation-required", "Legal-location attestation is required before funding.");
+    }
+    if (compliance?.screeningMode === "require-clear" && walletScreening !== "clear") {
+      return blocked("wallet-screening-blocked", "Wallet-risk or sanctions screening blocked funding.");
+    }
+
     if (!player.walletAddress) {
-      return {
-        roomMode: mode,
-        connectedWalletAddress: null,
-        boundWalletAddress: null,
-        requiredNetwork: "base",
-        requiredStablecoin: "USDC",
-        connectedNetwork,
-        connectedStablecoin,
-        status: "wallet-required",
-        fundingAllowed: false,
-        noRake: room.settings.blockchain?.noRake ?? true,
-      };
+      return blocked("wallet-required", "Connect a wallet before funding this Blockchain-Backed Room.");
     }
     if (connectedNetwork !== "base") {
-      return {
-        roomMode: mode,
-        connectedWalletAddress: player.walletAddress,
-        boundWalletAddress: player.walletAddress,
-        requiredNetwork: "base",
-        requiredStablecoin: "USDC",
-        connectedNetwork,
-        connectedStablecoin,
-        status: "wrong-chain",
-        fundingAllowed: false,
-        noRake: room.settings.blockchain?.noRake ?? true,
-      };
+      return blocked("wrong-chain", "Switch your Connected Wallet to Base before funding.");
     }
     if (connectedStablecoin !== "USDC") {
-      return {
-        roomMode: mode,
-        connectedWalletAddress: player.walletAddress,
-        boundWalletAddress: player.walletAddress,
-        requiredNetwork: "base",
-        requiredStablecoin: "USDC",
-        connectedNetwork,
-        connectedStablecoin,
-        status: "unsupported-token",
-        fundingAllowed: false,
-        noRake: room.settings.blockchain?.noRake ?? true,
-      };
+      return blocked("unsupported-token", "Use native USDC before funding this Blockchain-Backed Room.");
     }
 
     return {
@@ -275,9 +291,15 @@ export class LobbyStore {
       requiredStablecoin: "USDC",
       connectedNetwork,
       connectedStablecoin,
+      jurisdiction,
+      allowedJurisdictions: compliance?.allowedJurisdictions ?? [],
+      ageAttested,
+      legalLocationAttested,
+      trustModelDisclosureRequired: true,
       status: "ready",
       fundingAllowed: true,
-      noRake: room.settings.blockchain?.noRake ?? true,
+      noRake,
+      blockedReason: null,
     };
   }
 

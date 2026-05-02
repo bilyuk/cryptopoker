@@ -66,7 +66,7 @@ describe("Escrow-backed room entry", () => {
     }
   });
 
-  it("seats/waitlists players only after indexed deposit confirmation", async () => {
+  it("enforces lock-before-seat transition for blockchain-backed Buy-Ins", async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const app = moduleRef.createNestApplication();
     await app.init();
@@ -102,6 +102,7 @@ describe("Escrow-backed room entry", () => {
 
       let room = await currentRoom(server, hostCookie);
       expect(room.room.seats[1].playerId).toBeNull();
+      expect(room.room.seats[1].tableStack).toBeNull();
 
       await request(server)
         .post("/escrow/events/deposits")
@@ -115,6 +116,7 @@ describe("Escrow-backed room entry", () => {
         .expect(201);
       room = await currentRoom(server, hostCookie);
       expect(room.room.seats[1].playerId).toBeNull();
+      expect(room.room.seats[1].tableStack).toBeNull();
       const firstBeforeReplay = room.room.buyIns.find((buyIn: { playerId: string }) => buyIn.playerId === playerIdOf(room.room, "first"));
       expect(firstBeforeReplay.status).toBe("funding-pending");
 
@@ -124,6 +126,7 @@ describe("Escrow-backed room entry", () => {
       const firstBuyIn = room.room.buyIns.find((buyIn: { playerId: string }) => buyIn.playerId === playerIdOf(room.room, "first"));
       expect(firstBuyIn.status).toBe("lock-pending");
       expect(room.room.seats[1].playerId).toBeNull();
+      expect(room.room.seats[1].tableStack).toBeNull();
 
       await request(server)
         .post("/escrow/events/locks")

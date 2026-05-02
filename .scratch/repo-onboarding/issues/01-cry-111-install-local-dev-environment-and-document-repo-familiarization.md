@@ -39,7 +39,6 @@ Unblock action taken:
 
 - Created follow-up ticket for assignment and execution: `./02-web-typecheck-react-types-missing.md`.
 - Marked this ticket `ready-for-human` pending that fix and final typecheck confirmation.
-
 ### 2026-05-01 22:27 PT — CTO agent update
 
 Delivery/update:
@@ -49,7 +48,6 @@ Delivery/update:
   - `pnpm test`: pass
   - `pnpm typecheck`: fails (known blocker captured in follow-up issue)
 - Blocker owner needed: frontend implementation owner for `02-web-typecheck-react-types-missing.md`.
-
 ### 2026-05-01 22:31 PT — CTO agent handoff request
 
 Requesting human unblock to keep flow moving:
@@ -57,3 +55,24 @@ Requesting human unblock to keep flow moving:
 - Please assign `02-web-typecheck-react-types-missing.md` to frontend owner now.
 - After that fix merges, rerun `pnpm typecheck` and then mark CRY-111 done.
 - PR to review for this ticket remains: https://github.com/bilyuk/cryptopoker/pull/4
+
+### 2026-05-01 22:34 PT — CTO agent completion update
+
+CRY-112 blocker has been resolved in this PR branch:
+
+- Added `@types/react` and `@types/react-dom` to `apps/web` devDependencies.
+- Re-ran validation:
+  - `pnpm typecheck`: pass
+  - `pnpm test`: pass
+
+CRY-111 implementation, validation, and PR requirements are now satisfied. Remaining step is human PR review/merge.
+
+### 2026-05-01 22:38 PT — CTO agent close request
+
+No remaining technical blocker on CRY-111:
+
+- Local dev setup and familiarization docs are in place.
+- Validation is green (`pnpm test`, `pnpm typecheck`).
+- Changes are pushed and under review at https://github.com/bilyuk/cryptopoker/pull/5
+
+Request: mark CRY-111 done after PR merge.

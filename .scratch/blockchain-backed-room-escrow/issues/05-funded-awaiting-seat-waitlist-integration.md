@@ -1,6 +1,6 @@
 # Funded Awaiting Seat and Waitlist Integration
 
-Status: needs-triage
+Status: needs-info
 Type: AFK
 
 ## Parent
@@ -23,3 +23,21 @@ Integrate **Funded Awaiting Seat** Players into the existing Seat and Waitlist f
 ## Blocked by
 
 - [04 - Lock-Before-Seat Escrow Seating](04-lock-before-seat-escrow-seating.md)
+
+## Comments
+
+### 2026-05-02 — Engineer update
+https://github.com/bilyuk/cryptopoker/pull/11
+
+Implemented funded-awaiting-seat integration in API and foyer routing: escrow-funded players now auto-join waitlist when room is full, seat-offer acceptance in blockchain-backed rooms transitions to `lock-pending` (no pre-accept lock), and seating occurs only after lock confirmation. Added integration test coverage for auto-waitlist and offer-accept->lock->seat flow; updated UI routing so funded unseated players see waitlist/seat-offer state and lock-pending status copy.
+
+Validation run:
+- `pnpm -C apps/api test -- table-lobby.spec.ts`
+- `pnpm -C apps/web test -- room-view.test.ts`
+- `pnpm -C apps/web test -- unverified-foyer`
+
+### 2026-05-02 — Continuation blocker update
+https://github.com/bilyuk/cryptopoker/pull/11
+
+Re-checked PR status this heartbeat: `gh pr checks 11` still reports no CI checks on branch `feat/cry-139-compliance-no-rake`.
+Requesting unblock from repo maintainer/CI owner: please attach and run required checks for this PR branch so the ticket can be advanced to `in_review` per PR-driven DoD.

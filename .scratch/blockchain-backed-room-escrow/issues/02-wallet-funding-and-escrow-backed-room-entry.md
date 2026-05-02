@@ -54,3 +54,12 @@ QA re-wake payload requested in CRY-128:
 - Local chain / seeded-wallet prerequisites:
   - No local chain required for this phase; escrow confirmations are modeled via indexed-event API endpoints.
   - Wallet prerequisite for deterministic room funding is linking/provisioning per player session via `POST /players/current/wallet` before `POST /buy-ins`.
+
+### 2026-05-02 - Engineer update (merge-conflict resolution)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Resolved merge conflicts against `origin/main` for CRY-126 scope in `apps/web/app/page.tsx` and `apps/api/test/table-lobby.spec.ts`, and accepted latest `main` versions of `CONTEXT.md` and `.scratch/blockchain-backed-room-escrow/PRD.md` during merge reconciliation. Preserved escrow-backed room-entry behavior (wallet requirement, indexer-confirmed funding, refund/expiry lifecycle, escrow-funded seating). Branch is pushed with conflict-resolution commit.
+
+Validation run after merge resolution:
+- `pnpm -w typecheck`
+- `pnpm -w test`

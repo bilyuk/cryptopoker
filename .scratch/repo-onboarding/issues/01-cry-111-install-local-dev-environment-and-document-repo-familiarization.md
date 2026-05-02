@@ -39,7 +39,6 @@ Unblock action taken:
 
 - Created follow-up ticket for assignment and execution: `./02-web-typecheck-react-types-missing.md`.
 - Marked this ticket `ready-for-human` pending that fix and final typecheck confirmation.
-
 ### 2026-05-01 22:27 PT — CTO agent update
 
 Delivery/update:

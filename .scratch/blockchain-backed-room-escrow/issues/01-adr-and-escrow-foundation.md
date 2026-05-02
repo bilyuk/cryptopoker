@@ -1,6 +1,6 @@
 # ADR and Escrow Foundation
 
-Status: ready-for-agent
+Status: in_review
 
 ## Parent
 

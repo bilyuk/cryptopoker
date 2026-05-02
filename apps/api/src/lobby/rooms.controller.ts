@@ -44,4 +44,10 @@ export class RoomsController {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
     return { room: this.lobby.rotateInvite(player, roomId) };
   }
+
+  @Post("/rooms/:roomId/deal-first-hand")
+  startFirstHand(@Headers("cookie") cookieHeader: string | undefined, @Param("roomId") roomId: string): RoomResponse {
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
+    return { room: this.lobby.startFirstHand(player, roomId) };
+  }
 }

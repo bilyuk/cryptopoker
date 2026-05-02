@@ -1,0 +1,7 @@
+# Evidence and containment for disputes
+
+Blockchain-backed Rooms will not include on-chain dispute adjudication or platform-override payouts in v1. The contract should enforce deposits, refunds, signatures, nonces, Room Solvency, and emergency exits, while disputed poker history or disputed checkout amounts remain Host-arbitrated with product-level evidence, mediation, and Host reputation consequences.
+
+If settlement authority is revoked or unavailable, the Room may become Settlement Frozen: no new Hands start, normal Checkouts stop, and the Room Host may delegate a new Room Settlement Key to resume settlement before the emergency-exit delay expires. The v1 default is `EMERGENCY_EXIT_DELAY_DAYS=7`; after that delay, Players may self-call Emergency Exit to recover their cumulative escrowed deposits minus amounts already paid to them, not their current Table Stack. Escrow Refunds for unseated, unlocked escrow must remain available during pause or freeze; Locked Escrow can only exit through normal payout or Emergency Exit.
+
+The product should distinguish on-chain-verifiable facts such as deposits, payouts, signatures, and transaction hashes from platform-attested facts such as hand logs and Table Stack history. Platform powers are limited to evidence surfacing, mediation, Host reputation, and future access controls; the platform must not be able to override valid on-chain payout rules.

@@ -15,6 +15,43 @@ const headsUpSettings: RoomSettingsDto = {
 };
 
 describe("Escrow-backed room entry", () => {
+  it("starts first hand only for host with at least two seated players", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+      const hostCookie = await createPlayer(server, "host");
+      const guestCookie = await createPlayer(server, "guest");
+
+      const created = await request(server).post("/rooms").set("Cookie", hostCookie).send(headsUpSettings).expect(201);
+      const roomId = created.body.room.id;
+
+      await request(server)
+        .post(`/rooms/${roomId}/deal-first-hand`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("INSUFFICIENT_SEATED_PLAYERS"));
+
+      await join(server, guestCookie, created.body.room.inviteCode);
+      await fundAndConfirm(server, guestCookie, roomId, 1500, "deal");
+
+      await request(server).post(`/rooms/${roomId}/deal-first-hand`).set("Cookie", guestCookie).expect(403);
+
+      const dealt = await request(server).post(`/rooms/${roomId}/deal-first-hand`).set("Cookie", hostCookie).expect(201);
+      expect(dealt.body.room.hasStarted).toBe(true);
+
+      await request(server)
+        .post(`/rooms/${roomId}/deal-first-hand`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("HAND_ALREADY_STARTED"));
+    } finally {
+      await app.close();
+    }
+  });
+
   it("seats/waitlists players only after indexed deposit confirmation", async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const app = moduleRef.createNestApplication();
@@ -32,20 +69,27 @@ describe("Escrow-backed room entry", () => {
 
       await join(server, firstGuestCookie, inviteCode);
       await join(server, secondGuestCookie, inviteCode);
-      await linkWallet(server, firstGuestCookie);
-      await linkWallet(server, secondGuestCookie);
 
       const firstPending = await request(server)
         .post("/buy-ins")
         .set("Cookie", firstGuestCookie)
         .send({ roomId, amount: 1200 })
+        .expect(400);
+      expect(firstPending.body.code).toBe("WALLET_REQUIRED");
+
+      await linkWallet(server, firstGuestCookie);
+      await linkWallet(server, secondGuestCookie);
+
+      const fundedCandidate = await request(server)
+        .post("/buy-ins")
+        .set("Cookie", firstGuestCookie)
+        .send({ roomId, amount: 1200 })
         .expect(201);
 
-      // Pending buy-in alone must not seat yet.
       let room = await currentRoom(server, hostCookie);
       expect(room.room.seats[1].playerId).toBeNull();
 
-      await confirmDeposit(server, firstPending.body.buyIn.fundingReference, "evt-1", "tx-1");
+      await confirmDeposit(server, fundedCandidate.body.buyIn.fundingReference, "evt-1", "tx-1");
       room = await currentRoom(server, hostCookie);
       expect(room.room.seats[1].playerId).toBe(playerIdOf(room.room, "first"));
 
@@ -128,6 +172,18 @@ function confirmDeposit(server: Parameters<typeof request>[0], fundingReference:
     .post("/escrow/events/deposits")
     .send({ eventId, fundingReference, txHash, blockNumber: 123 })
     .expect(201);
+}
+
+async function fundAndConfirm(
+  server: Parameters<typeof request>[0],
+  playerCookie: string,
+  roomId: string,
+  amount: number,
+  id: string,
+): Promise<void> {
+  await linkWallet(server, playerCookie);
+  const buyIn = await request(server).post("/buy-ins").set("Cookie", playerCookie).send({ roomId, amount }).expect(201);
+  await confirmDeposit(server, buyIn.body.buyIn.fundingReference, `evt-${id}`, `tx-${id}`);
 }
 
 async function currentRoom(server: Parameters<typeof request>[0], cookie: string): Promise<{ room: any }> {

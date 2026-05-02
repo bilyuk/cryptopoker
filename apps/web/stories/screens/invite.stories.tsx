@@ -23,10 +23,11 @@ type Story = StoryObj<typeof meta>;
 
 export const MobileInvite: Story = {
   args: {
+    playerName: "riverrat",
     hostName: "riverrat",
     room: defaultRooms[0],
     onBack: () => undefined,
     onJoin: () => undefined,
-    onSignIn: () => undefined,
+    onUseDifferentPlayer: () => undefined,
   },
 };

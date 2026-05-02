@@ -145,6 +145,21 @@ export class LobbyStore {
     return this.commit(commandResult(dto, [{ type: "room.updated", room: dto }]));
   }
 
+  startFirstHand(actor: PlayerDto, roomId: string): RoomDto {
+    const room = this.requireJoinedRoom(actor, roomId);
+    this.assertHost(actor, room);
+    if (room.hasStarted) {
+      throw new BadRequestException({ code: "HAND_ALREADY_STARTED", message: "The first Hand has already started." });
+    }
+    if (room.seats.filter((seat) => seat.playerId !== null).length < 2) {
+      throw new BadRequestException({ code: "INSUFFICIENT_SEATED_PLAYERS", message: "At least two seated Players are required to start the first Hand." });
+    }
+
+    room.hasStarted = true;
+    const dto = toRoomDto(room);
+    return this.commit(commandResult(dto, [{ type: "room.updated", room: dto }]));
+  }
+
   requestBuyIn(player: PlayerDto, roomId: string, amount: number): BuyInDto {
     const room = this.requireJoinedRoom(player, roomId);
     if (amount < room.settings.buyInMin || amount > room.settings.buyInMax) {

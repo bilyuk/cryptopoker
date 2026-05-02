@@ -30,6 +30,10 @@ export function useRoomClient() {
     () => rooms.find((room) => room.id === selectedRoomId) ?? rooms[0],
     [rooms, selectedRoomId],
   );
+  const currentPlayer = useMemo(
+    () => selectedRoom?.players.find((player) => player.playerId === playerId),
+    [selectedRoom, playerId],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +96,17 @@ export function useRoomClient() {
       socket.disconnect();
     };
   }, [subscribableRoomId]);
+
+  useEffect(() => {
+    if (!selectedRoom || !currentPlayer?.seated) return;
+    if (selectedRoom.hasStarted) {
+      setScreen("table");
+      return;
+    }
+    if (screen === "table") {
+      setScreen("waiting");
+    }
+  }, [currentPlayer?.seated, screen, selectedRoom]);
 
   async function enterLobby(name: string) {
     setSessionBusy(true);
@@ -245,6 +260,7 @@ export function useRoomClient() {
   const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
   const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
   const declineSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/decline`);
+  const startFirstHand = () => runRoomCommand(`/rooms/${selectedRoom.id}/deal-first-hand`);
 
   return {
     acceptSeatOffer,
@@ -268,6 +284,7 @@ export function useRoomClient() {
     sessionBusy,
     sessionError,
     setScreen,
+    startFirstHand,
     shareInvite,
     signOut,
     inviteJoinError,

@@ -40,7 +40,7 @@ export default function Home() {
           playerName={roomClient.playerName}
           room={roomClient.selectedRoom}
           onBackToLobby={() => roomClient.setScreen("lobby")}
-          onDeal={() => roomClient.setScreen("table")}
+          onDeal={roomClient.startFirstHand}
           onExpireBuyIn={roomClient.expireBuyIn}
           onRefundBuyIn={roomClient.refundBuyIn}
           onLeaveSeat={roomClient.leaveSeat}
@@ -83,10 +83,11 @@ export default function Home() {
       )}
       {roomClient.screen === "invite" && (
         <InviteScreen
+          playerName={roomClient.playerName}
           hostName={roomClient.selectedRoom.hostName}
           room={roomClient.selectedRoom}
           onJoin={roomClient.joinInvite}
-          onSignIn={roomClient.signOut}
+          onUseDifferentPlayer={roomClient.signOut}
           onBack={() => roomClient.setScreen("lobby")}
           error={roomClient.inviteJoinError}
         />

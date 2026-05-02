@@ -14,7 +14,6 @@ type WelcomeScreenProps = {
 
 export function WelcomeScreen({ onEnter, busy = false, error }: WelcomeScreenProps) {
   const [name, setName] = useState("");
-  const [mode, setMode] = useState<"guest" | "signin">("guest");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,14 +38,7 @@ export function WelcomeScreen({ onEnter, busy = false, error }: WelcomeScreenPro
 
       <Panel className="w-full max-w-[660px] p-7 text-left">
         <form onSubmit={submit}>
-          <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-champagne-500/15 bg-sapphire-950/60 p-1.5">
-            <AurumButton active={mode === "guest"} type="button" variant="segment" onClick={() => setMode("guest")}>
-              Play as Guest
-            </AurumButton>
-            <AurumButton active={mode === "signin"} type="button" variant="segment" onClick={() => setMode("signin")}>
-              Sign In
-            </AurumButton>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.55em] text-champagne-500">Guest Player</p>
           <label className="mt-7 grid gap-2.5">
             <span className="text-sm font-semibold uppercase tracking-[0.3em] text-champagne-500">Display name</span>
             <input
@@ -56,10 +48,10 @@ export function WelcomeScreen({ onEnter, busy = false, error }: WelcomeScreenPro
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          <p className="mt-4 text-sm text-sapphire-400">This browser keeps your Player identity for next time.</p>
+          <p className="mt-4 text-sm text-sapphire-400">This browser keeps your Player and Display Name for next time.</p>
           {error && <p className="mt-4 text-sm font-semibold text-rose-200">{error}</p>}
           <AurumButton className="mt-6 w-full min-h-16" type="submit" disabled={busy}>
-            {mode === "guest" ? "Take a Seat" : "Continue"}
+            Take a Seat
             <ArrowRight size={16} />
           </AurumButton>
         </form>

@@ -19,6 +19,7 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
     id: room.id,
     inviteCode: room.inviteCode,
     hostPlayerId: room.hostPlayerId,
+    hasStarted: room.hasStarted,
     hostName: host?.displayName ?? "Host",
     name: room.settings.name,
     variant: "No Limit Hold'em",

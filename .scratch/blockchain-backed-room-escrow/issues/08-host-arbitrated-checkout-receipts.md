@@ -1,0 +1,27 @@
+# Host-Arbitrated Checkout and Receipts
+
+Status: needs-triage
+Type: AFK
+
+## Parent
+
+[PRD: Blockchain-Backed Room Escrow](../PRD.md)
+
+## What to build
+
+Add **Checkout** for blockchain-backed Players: request checkout in the app, wait for the current **Live Hand** to settle if needed, authorize payout through the **Room Settlement Key**, relay payout to the **Bound Wallet**, and show an auditable receipt.
+
+## Acceptance criteria
+
+- [ ] A Player can request Checkout from a Blockchain-Backed Room.
+- [ ] Checkout requested during a Live Hand waits until the Hand settles and removes the Player from future Hands.
+- [ ] Payout authorization includes exact Room, Player wallet, amount, and nonce.
+- [ ] The contract rejects replayed, wrong-Room, wrong-wallet, or unauthorized payout signatures.
+- [ ] Payouts go only to the Player's Bound Wallet.
+- [ ] The UI shows payout amount, authorizing Host or Room Settlement Key, transaction hash, and trust-model copy.
+- [ ] Tests cover normal Checkout, Live Hand deferral, payout authorization, nonce replay protection, Bound Wallet payout, and receipt content.
+
+## Blocked by
+
+- [06 - Bound Wallet Enforcement](06-bound-wallet-enforcement.md)
+- [07 - Room Settlement Key Delegation](07-room-settlement-key-delegation.md)

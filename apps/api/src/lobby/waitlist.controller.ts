@@ -13,12 +13,6 @@ export class WaitlistController {
     private readonly lobby: LobbyStore,
   ) {}
 
-  @Post("/waitlist/join")
-  joinWaitlist(@Headers("cookie") cookieHeader: string | undefined, @Body() body: RoomCommandRequest): RoomResponse {
-    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
-    return { room: this.lobby.joinWaitlist(player, body.roomId) };
-  }
-
   @Post("/waitlist/leave")
   leaveWaitlist(@Headers("cookie") cookieHeader: string | undefined, @Body() body: RoomCommandRequest): RoomResponse {
     const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();

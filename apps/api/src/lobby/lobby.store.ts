@@ -26,6 +26,13 @@ export class LobbyStore {
     this.assertNoActiveRoom(host.id);
     const normalized = normalizeRoomSettings(settings);
     const inviteCode = createInviteCode();
+    const hostBuyIn: BuyInDto = {
+      id: randomUUID(),
+      roomId: "",
+      playerId: host.id,
+      amount: normalized.buyInMin,
+      status: "host-verified",
+    };
     const room: RoomRecord = {
       id: randomUUID(),
       hostPlayerId: host.id,
@@ -35,7 +42,7 @@ export class LobbyStore {
       hasStarted: false,
       joinedPlayerIds: new Set([host.id]),
       players: [{ playerId: host.id, displayName: host.displayName, role: "host" }],
-      buyIns: [],
+      buyIns: [hostBuyIn],
       seats: Array.from({ length: normalized.seatCount }, (_, index) => ({
         seatNumber: index + 1,
         playerId: null,
@@ -44,11 +51,18 @@ export class LobbyStore {
       waitlist: [],
       seatOffers: [],
     };
+    hostBuyIn.roomId = room.id;
 
     this.rooms.set(room.id, room);
     this.roomIdByInviteCode.set(inviteCode, room.id);
     this.activeRoomIdByPlayerId.set(host.id, room.id);
-    return this.commit(commandResult(toRoomDto(room), [{ type: "player.updated", playerId: host.id }]));
+    this.roomIdByBuyInId.set(hostBuyIn.id, room.id);
+
+    const seatResult = tableSeating.claimSeat(host, room, 1);
+    return this.commit(commandResult(seatResult.value, [
+      { type: "player.updated", playerId: host.id },
+      ...seatResult.events,
+    ]));
   }
 
   playerCanAccessRoom(playerId: string, roomId: string): boolean {
@@ -126,6 +140,9 @@ export class LobbyStore {
     if (amount < room.settings.buyInMin || amount > room.settings.buyInMax) {
       throw new BadRequestException({ code: "BUY_IN_OUT_OF_RANGE", message: "Buy-In amount must be within the Room's allowed range." });
     }
+    if (room.buyIns.some((existing) => existing.playerId === player.id && existing.status === "pending")) {
+      throw new BadRequestException({ code: "BUY_IN_PENDING", message: "A pending Buy-In already exists for this Player in this Room." });
+    }
 
     const buyIn: BuyInDto = {
       id: randomUUID(),
@@ -142,30 +159,33 @@ export class LobbyStore {
   approveBuyIn(actor: PlayerDto, buyInId: string): BuyInDto {
     const { room, buyIn } = this.requireBuyIn(buyInId);
     this.assertHost(actor, room);
+    if (buyIn.status !== "pending") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only a pending Buy-In can be approved." });
+    }
     buyIn.status = "host-verified";
-    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+
+    const buyInPlayer = this.roomPlayerDto(room, buyIn.playerId);
+    const seatNumber = lowestOpenSeatWithoutPendingOffer(room);
+    const seatingResult = seatNumber !== undefined
+      ? tableSeating.claimSeat(buyInPlayer, room, seatNumber)
+      : tableSeating.joinWaitlist(buyInPlayer, room);
+
+    return this.commit(commandResult({ ...buyIn }, seatingResult.events));
   }
 
   rejectBuyIn(actor: PlayerDto, buyInId: string): BuyInDto {
     const { room, buyIn } = this.requireBuyIn(buyInId);
     this.assertHost(actor, room);
+    if (buyIn.status !== "pending") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only a pending Buy-In can be rejected." });
+    }
     buyIn.status = "rejected";
     return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
-  }
-
-  claimSeat(player: PlayerDto, roomId: string, seatNumber: number): RoomDto {
-    const room = this.requireJoinedRoom(player, roomId);
-    return this.commit(tableSeating.claimSeat(player, room, seatNumber));
   }
 
   leaveSeat(player: PlayerDto, roomId: string): RoomDto {
     const room = this.requireJoinedRoom(player, roomId);
     return this.commit(tableSeating.leaveSeat(player, room));
-  }
-
-  joinWaitlist(player: PlayerDto, roomId: string): RoomDto {
-    const room = this.requireJoinedRoom(player, roomId);
-    return this.commit(tableSeating.joinWaitlist(player, room));
   }
 
   leaveWaitlist(player: PlayerDto, roomId: string): RoomDto {
@@ -243,4 +263,23 @@ export class LobbyStore {
     }
     return result.value;
   }
+
+  private roomPlayerDto(room: RoomRecord, playerId: string): PlayerDto {
+    const member = room.players.find((entry) => entry.playerId === playerId);
+    if (!member) {
+      throw new NotFoundException({ code: "PLAYER_NOT_IN_ROOM", message: "Player is not a member of this Room." });
+    }
+    return { id: member.playerId, displayName: member.displayName };
+  }
+}
+
+function lowestOpenSeatWithoutPendingOffer(room: RoomRecord): number | undefined {
+  for (const seat of room.seats) {
+    if (seat.playerId !== null) continue;
+    const hasPendingOffer = room.seatOffers.some(
+      (offer) => offer.seatNumber === seat.seatNumber && offer.status === "pending",
+    );
+    if (!hasPendingOffer) return seat.seatNumber;
+  }
+  return undefined;
 }

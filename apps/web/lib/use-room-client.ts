@@ -232,13 +232,11 @@ export function useRoomClient() {
     });
   }
 
-  const requestBuyIn = () =>
-    runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount: selectedRoom.buyInMinValue });
+  const requestBuyIn = (amount: number) =>
+    runRoomCommand("/buy-ins", { roomId: selectedRoom.id, amount });
   const approveBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/approve`);
-  const claimSeat = (seatNumber: number) =>
-    runRoomCommand("/seats/claim", { roomId: selectedRoom.id, seatNumber });
+  const rejectBuyIn = (buyInId: string) => runRoomCommand(`/buy-ins/${buyInId}/reject`);
   const leaveSeat = () => runRoomCommand("/seats/leave", { roomId: selectedRoom.id });
-  const joinWaitlist = () => runRoomCommand("/waitlist/join", { roomId: selectedRoom.id });
   const leaveWaitlist = () => runRoomCommand("/waitlist/leave", { roomId: selectedRoom.id });
   const acceptSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/accept`);
   const declineSeatOffer = (seatOfferId: string) => runRoomCommand(`/seat-offers/${seatOfferId}/decline`);
@@ -246,13 +244,12 @@ export function useRoomClient() {
   return {
     acceptSeatOffer,
     approveBuyIn,
-    claimSeat,
+    rejectBuyIn,
     createRoom,
     declineSeatOffer,
     copyInvite,
     enterLobby,
     joinInvite,
-    joinWaitlist,
     leaveSeat,
     leaveWaitlist,
     openRoom,

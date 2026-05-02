@@ -80,8 +80,3 @@ export type RequestBuyInRequest = {
 export type RoomCommandRequest = {
   roomId: string;
 };
-
-export type ClaimSeatRequest = {
-  roomId: string;
-  seatNumber: number;
-};

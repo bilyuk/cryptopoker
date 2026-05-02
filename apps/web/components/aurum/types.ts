@@ -13,13 +13,14 @@ export type Room = {
   variant: string;
   blinds: string;
   buyIn: string;
-  buyInMinValue: number;
+  buyInRange: { min: number; max: number };
   seats: string;
   timer: string;
   status: "Seats open" | "Full";
   occupiedSeats: number;
   seatCount: number;
-  seatLabels: RoomSeatLabel[];
+  seatRoster: RoomSeatRosterEntry[];
+  waitlistRoster: RoomWaitlistEntry[];
   players: RoomPlayerSummary[];
   pendingBuyIns: RoomBuyInSummary[];
   openSeatNumbers: number[];
@@ -30,9 +31,18 @@ export type Room = {
   private?: boolean;
 };
 
-export type RoomSeatLabel = {
-  label: string;
+export type RoomSeatRosterEntry = {
+  seatNumber: number;
+  playerId: string | null;
+  displayName: string | null;
+  isHost: boolean;
   stack: string | null;
+};
+
+export type RoomWaitlistEntry = {
+  position: number;
+  playerId: string;
+  displayName: string;
 };
 
 export type RoomPlayerSummary = {

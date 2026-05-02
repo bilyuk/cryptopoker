@@ -42,7 +42,12 @@ export function joinWaitlist(player: PlayerDto, room: RoomRecord): CommandResult
   if (room.seats.some((seat) => seat.playerId === player.id)) {
     throw new BadRequestException({ code: "PLAYER_ALREADY_SEATED", message: "A seated Player cannot join the Waitlist." });
   }
-  if (room.seats.some((seat) => !seat.playerId)) {
+  const claimableSeatExists = room.seats.some(
+    (seat) =>
+      !seat.playerId &&
+      !room.seatOffers.some((offer) => offer.seatNumber === seat.seatNumber && offer.status === "pending"),
+  );
+  if (claimableSeatExists) {
     throw new BadRequestException({ code: "SEAT_AVAILABLE", message: "A Player can claim an open Seat instead of joining the Waitlist." });
   }
   if (!room.waitlist.some((entry) => entry.playerId === player.id)) {

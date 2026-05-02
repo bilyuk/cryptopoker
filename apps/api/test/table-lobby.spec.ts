@@ -14,8 +14,13 @@ const headsUpSettings: RoomSettingsDto = {
   actionTimerSeconds: 30,
 };
 
-describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
-  it("requires Host verification before seating, preserves FIFO Waitlist order, and offers an opened Seat before seating a waitlisted Player", async () => {
+const threeSeatSettings: RoomSettingsDto = {
+  ...headsUpSettings,
+  seatCount: 3,
+};
+
+describe("Velvet Room: auto-seat on Host verification", () => {
+  it("auto-seats the Host on Room creation, fills lowest open Seats on approval, and auto-waitlists when full", async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const app = moduleRef.createNestApplication();
     await app.init();
@@ -30,58 +35,56 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
       const created = await request(server)
         .post("/rooms")
         .set("Cookie", hostCookie)
-        .send(headsUpSettings)
+        .send(threeSeatSettings)
         .expect(201);
       const roomId = created.body.room.id;
       const inviteCode = created.body.room.inviteCode;
+
+      // Host is auto-seated at Seat 1 with a host-verified Buy-In at the room minimum.
+      expect(created.body.room.seats[0].playerId).toBe(created.body.room.hostPlayerId);
+      expect(created.body.room.seats[0].tableStack).toBe(threeSeatSettings.buyInMin);
+      expect(created.body.room.buyIns).toHaveLength(1);
+      expect(created.body.room.buyIns[0].status).toBe("host-verified");
 
       await join(server, firstGuestCookie, inviteCode);
       await join(server, secondGuestCookie, inviteCode);
       await join(server, thirdGuestCookie, inviteCode);
 
-      const pending = await request(server)
+      // Guest cannot self-approve.
+      const firstPending = await request(server)
         .post("/buy-ins")
         .set("Cookie", firstGuestCookie)
         .send({ roomId, amount: 1200 })
         .expect(201);
-      expect(pending.body.buyIn.status).toBe("pending");
-
       await request(server)
-        .post("/seats/claim")
-        .set("Cookie", firstGuestCookie)
-        .send({ roomId, seatNumber: 1 })
-        .expect(400)
-        .expect(({ body }) => expect(body.code).toBe("HOST_VERIFIED_BUY_IN_REQUIRED"));
-
-      await request(server)
-        .post(`/buy-ins/${pending.body.buyIn.id}/approve`)
+        .post(`/buy-ins/${firstPending.body.buyIn.id}/approve`)
         .set("Cookie", firstGuestCookie)
         .expect(403);
 
-      await request(server)
-        .post(`/buy-ins/${pending.body.buyIn.id}/approve`)
+      // Host approves first guest -> auto-seated at Seat 2.
+      const firstApproved = await request(server)
+        .post(`/buy-ins/${firstPending.body.buyIn.id}/approve`)
         .set("Cookie", hostCookie)
-        .expect(201)
-        .expect(({ body }) => expect(body.buyIn.status).toBe("host-verified"));
-
-      const seatedFirst = await request(server)
-        .post("/seats/claim")
-        .set("Cookie", firstGuestCookie)
-        .send({ roomId, seatNumber: 1 })
         .expect(201);
-      expect(seatedFirst.body.room.seats[0].tableStack).toBe(1200);
+      expect(firstApproved.body.buyIn.status).toBe("host-verified");
+      const afterFirst = await currentRoom(server, hostCookie);
+      expect(afterFirst.room.seats[1].playerId).toBe(playerIdOf(afterFirst.room, "first"));
+      expect(afterFirst.room.seats[1].tableStack).toBe(1200);
 
-      await verifyAndSeat(server, hostCookie, secondGuestCookie, roomId, 1500, 2);
+      // Host approves second guest -> auto-seated at Seat 3 (room now full).
+      await verify(server, hostCookie, secondGuestCookie, roomId, 1500);
+      const afterSecond = await currentRoom(server, hostCookie);
+      expect(afterSecond.room.seats[2].playerId).toBe(playerIdOf(afterSecond.room, "second"));
 
+      // Host approves third guest -> room full, auto-waitlisted at #1.
       await verify(server, hostCookie, thirdGuestCookie, roomId, 1100);
-      const waitlisted = await request(server)
-        .post("/waitlist/join")
-        .set("Cookie", thirdGuestCookie)
-        .send({ roomId })
-        .expect(201);
-      expect(waitlisted.body.room.waitlist).toEqual([{ playerId: waitlisted.body.room.players[3].playerId, position: 1 }]);
-      expect(waitlisted.body.room).not.toHaveProperty("liveHand");
+      const afterThird = await currentRoom(server, hostCookie);
+      expect(afterThird.room.seats.every((seat: { playerId: string | null }) => seat.playerId !== null)).toBe(true);
+      expect(afterThird.room.waitlist).toEqual([
+        { playerId: playerIdOf(afterThird.room, "third"), position: 1 },
+      ]);
 
+      // First guest leaves -> Seat 2 opens, Seat Offer issued to third (waitlist head).
       const opened = await request(server)
         .post("/seats/leave")
         .set("Cookie", firstGuestCookie)
@@ -89,28 +92,22 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
         .expect(201);
       const offer = opened.body.room.seatOffers[0];
       expect(offer.status).toBe("pending");
-      expect(opened.body.room.seats[0].playerId).toBeNull();
+      expect(offer.playerId).toBe(playerIdOf(opened.body.room, "third"));
+      expect(opened.body.room.seats[1].playerId).toBeNull();
 
-      await request(server)
-        .post("/seats/claim")
-        .set("Cookie", thirdGuestCookie)
-        .send({ roomId, seatNumber: 1 })
-        .expect(400)
-        .expect(({ body }) => expect(body.code).toBe("SEAT_OFFER_ACCEPTANCE_REQUIRED"));
-
+      // Third accepts -> seated at Seat 2, waitlist drains.
       const accepted = await request(server)
         .post(`/seat-offers/${offer.id}/accept`)
         .set("Cookie", thirdGuestCookie)
         .expect(201);
-
-      expect(accepted.body.room.seats[0].playerId).toBe(offer.playerId);
+      expect(accepted.body.room.seats[1].playerId).toBe(offer.playerId);
       expect(accepted.body.room.waitlist).toEqual([]);
     } finally {
       await app.close();
     }
   });
 
-  it("rejects out-of-range or rejected Buy-Ins and advances Seat Offers after decline or expiry", async () => {
+  it("guards Buy-In status transitions, blocks duplicate pending requests, and auto-waitlists when target Seat has a pending Seat Offer", async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const app = moduleRef.createNestApplication();
     await app.init();
@@ -131,28 +128,109 @@ describe("Host-Verified Buy-Ins, Seats, Waitlist, and Seat Offers", () => {
         await join(server, cookie, inviteCode);
       }
 
-      await request(server).post("/buy-ins").set("Cookie", firstCookie).send({ roomId, amount: 999 }).expect(400);
+      // Out-of-range Buy-In is rejected.
+      await request(server)
+        .post("/buy-ins")
+        .set("Cookie", firstCookie)
+        .send({ roomId, amount: 999 })
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_OUT_OF_RANGE"));
 
-      const rejected = await request(server).post("/buy-ins").set("Cookie", fourthCookie).send({ roomId, amount: 1000 }).expect(201);
-      await request(server).post(`/buy-ins/${rejected.body.buyIn.id}/reject`).set("Cookie", hostCookie).expect(201);
-      await request(server).post("/waitlist/join").set("Cookie", fourthCookie).send({ roomId }).expect(400);
+      // First guest requests, then duplicate request is blocked.
+      const firstPending = await request(server)
+        .post("/buy-ins")
+        .set("Cookie", firstCookie)
+        .send({ roomId, amount: 1000 })
+        .expect(201);
+      await request(server)
+        .post("/buy-ins")
+        .set("Cookie", firstCookie)
+        .send({ roomId, amount: 1500 })
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_PENDING"));
 
-      await verifyAndSeat(server, hostCookie, firstCookie, roomId, 1000, 1);
-      await verifyAndSeat(server, hostCookie, secondCookie, roomId, 1000, 2);
-      await verify(server, hostCookie, thirdCookie, roomId, 1000);
-      await verify(server, hostCookie, fourthCookie, roomId, 1200);
-      await request(server).post("/waitlist/join").set("Cookie", thirdCookie).send({ roomId }).expect(201);
-      await request(server).post("/waitlist/join").set("Cookie", fourthCookie).send({ roomId }).expect(201);
+      // Host approves first -> auto-seated at Seat 2 (heads-up room is now full).
+      await request(server)
+        .post(`/buy-ins/${firstPending.body.buyIn.id}/approve`)
+        .set("Cookie", hostCookie)
+        .expect(201);
 
-      const opened = await request(server).post("/seats/leave").set("Cookie", firstCookie).send({ roomId }).expect(201);
-      const firstOffer = opened.body.room.seatOffers[0];
+      // Re-approving an already-verified Buy-In is rejected.
+      await request(server)
+        .post(`/buy-ins/${firstPending.body.buyIn.id}/approve`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_STATUS_INVALID"));
 
-      await request(server).post(`/seat-offers/${firstOffer.id}/decline`).set("Cookie", thirdCookie).expect(201);
-      const afterDecline = await request(server).get("/rooms/current").set("Cookie", hostCookie).expect(200);
-      expect(afterDecline.body.room.seatOffers[1].playerId).toBe(afterDecline.body.room.waitlist[0].playerId);
+      // Rejecting an already-verified Buy-In is rejected.
+      await request(server)
+        .post(`/buy-ins/${firstPending.body.buyIn.id}/reject`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_STATUS_INVALID"));
 
-      await request(server).post(`/seat-offers/${afterDecline.body.room.seatOffers[1].id}/expire`).expect(201);
-      await request(server).post(`/seat-offers/${firstOffer.id}/accept`).set("Cookie", thirdCookie).expect(400);
+      // After firstCookie is seated, second + third + fourth all queue through buy-in.
+      // Second is auto-waitlisted at #1 (room full).
+      await verify(server, hostCookie, secondCookie, roomId, 1500);
+
+      // Reject flow: host rejects fourth, then re-approving rejected Buy-In is blocked,
+      // and fourth can request a fresh Buy-In afterward.
+      const rejected = await request(server)
+        .post("/buy-ins")
+        .set("Cookie", fourthCookie)
+        .send({ roomId, amount: 1100 })
+        .expect(201);
+      await request(server)
+        .post(`/buy-ins/${rejected.body.buyIn.id}/reject`)
+        .set("Cookie", hostCookie)
+        .expect(201);
+      await request(server)
+        .post(`/buy-ins/${rejected.body.buyIn.id}/approve`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_STATUS_INVALID"));
+      await request(server)
+        .post(`/buy-ins/${rejected.body.buyIn.id}/reject`)
+        .set("Cookie", hostCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_STATUS_INVALID"));
+
+      // First leaves -> Seat 2 opens, Seat Offer goes to second (head of waitlist).
+      const opened = await request(server)
+        .post("/seats/leave")
+        .set("Cookie", firstCookie)
+        .send({ roomId })
+        .expect(201);
+      const offer = opened.body.room.seatOffers[0];
+      expect(offer.playerId).toBe(playerIdOf(opened.body.room, "second"));
+
+      // While that offer is pending, host approves third's Buy-In.
+      // Seat 2 is "open" but has a pending Seat Offer -> third must auto-waitlist (FIFO preserved).
+      await verify(server, hostCookie, thirdCookie, roomId, 1300);
+      const afterThird = await currentRoom(server, hostCookie);
+      const thirdEntry = afterThird.room.waitlist.find(
+        (w: { playerId: string }) => w.playerId === playerIdOf(afterThird.room, "third"),
+      );
+      expect(thirdEntry).toBeDefined();
+      expect(afterThird.room.seats[1].playerId).toBeNull();
+
+      // Second declines the offer -> next offer goes to third (now head of waitlist).
+      await request(server)
+        .post(`/seat-offers/${offer.id}/decline`)
+        .set("Cookie", secondCookie)
+        .expect(201);
+      const afterDecline = await currentRoom(server, hostCookie);
+      const nextOffer = afterDecline.room.seatOffers.find(
+        (o: { status: string }) => o.status === "pending",
+      );
+      expect(nextOffer.playerId).toBe(playerIdOf(afterDecline.room, "third"));
+
+      // Expire the offer; trying to accept the original (declined) offer is rejected.
+      await request(server).post(`/seat-offers/${nextOffer.id}/expire`).expect(201);
+      await request(server)
+        .post(`/seat-offers/${offer.id}/accept`)
+        .set("Cookie", secondCookie)
+        .expect(400);
     } finally {
       await app.close();
     }
@@ -173,19 +251,28 @@ async function join(server: Parameters<typeof request>[0], cookie: string, invit
   await request(server).post(`/invite-links/${inviteCode}/join`).set("Cookie", cookie).expect(201);
 }
 
-async function verify(server: Parameters<typeof request>[0], hostCookie: string, playerCookie: string, roomId: string, amount: number): Promise<void> {
-  const buyIn = await request(server).post("/buy-ins").set("Cookie", playerCookie).send({ roomId, amount }).expect(201);
-  await request(server).post(`/buy-ins/${buyIn.body.buyIn.id}/approve`).set("Cookie", hostCookie).expect(201);
-}
-
-async function verifyAndSeat(
+async function verify(
   server: Parameters<typeof request>[0],
   hostCookie: string,
   playerCookie: string,
   roomId: string,
   amount: number,
-  seatNumber: number,
-): Promise<void> {
-  await verify(server, hostCookie, playerCookie, roomId, amount);
-  await request(server).post("/seats/claim").set("Cookie", playerCookie).send({ roomId, seatNumber }).expect(201);
+): Promise<{ buyIn: { id: string; status: string } }> {
+  const buyIn = await request(server).post("/buy-ins").set("Cookie", playerCookie).send({ roomId, amount }).expect(201);
+  const approved = await request(server)
+    .post(`/buy-ins/${buyIn.body.buyIn.id}/approve`)
+    .set("Cookie", hostCookie)
+    .expect(201);
+  return approved.body;
+}
+
+async function currentRoom(server: Parameters<typeof request>[0], cookie: string): Promise<{ room: any }> {
+  const res = await request(server).get("/rooms/current").set("Cookie", cookie).expect(200);
+  return res.body;
+}
+
+function playerIdOf(room: { players: Array<{ playerId: string; displayName: string }> }, displayName: string): string {
+  const match = room.players.find((p) => p.displayName === displayName);
+  if (!match) throw new Error(`Player with displayName ${displayName} not found in room.`);
+  return match.playerId;
 }

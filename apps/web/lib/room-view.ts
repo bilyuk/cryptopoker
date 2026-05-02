@@ -1,5 +1,11 @@
 import type { PlayerDto, RoomDto } from "@cryptopoker/contracts";
-import type { Room, RoomBuyInSummary, RoomPlayerSummary, RoomSeatLabel } from "@/components/aurum/types";
+import type {
+  Room,
+  RoomBuyInSummary,
+  RoomPlayerSummary,
+  RoomSeatRosterEntry,
+  RoomWaitlistEntry,
+} from "@/components/aurum/types";
 import { formatMoney } from "./format";
 
 export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id"]): Room {
@@ -18,15 +24,26 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
     variant: "No Limit Hold'em",
     blinds: `$${room.settings.smallBlind}/$${room.settings.bigBlind}`,
     buyIn: `$${room.settings.buyInMin}-$${room.settings.buyInMax}`,
-    buyInMinValue: room.settings.buyInMin,
+    buyInRange: { min: room.settings.buyInMin, max: room.settings.buyInMax },
     seats: `${occupiedSeats}/${room.settings.seatCount}`,
     occupiedSeats,
     seatCount: room.settings.seatCount,
-    seatLabels: room.seats.map((seat): RoomSeatLabel => {
+    seatRoster: room.seats.map((seat): RoomSeatRosterEntry => {
       const player = seat.playerId ? room.players.find((candidate) => candidate.playerId === seat.playerId) : undefined;
       return {
-        label: player ? formatSeatPlayer(player, room.hostPlayerId) : `Seat ${seat.seatNumber} - waiting...`,
+        seatNumber: seat.seatNumber,
+        playerId: seat.playerId,
+        displayName: player?.displayName ?? null,
+        isHost: Boolean(player && player.playerId === room.hostPlayerId),
         stack: seat.tableStack === null ? null : formatMoney(seat.tableStack),
+      };
+    }),
+    waitlistRoster: room.waitlist.map((entry): RoomWaitlistEntry => {
+      const player = room.players.find((candidate) => candidate.playerId === entry.playerId);
+      return {
+        position: entry.position,
+        playerId: entry.playerId,
+        displayName: player?.displayName ?? "Player",
       };
     }),
     players: room.players.map((player): RoomPlayerSummary => {
@@ -67,10 +84,6 @@ export function toUiRoomForPlayer(room: RoomDto, currentPlayerId?: PlayerDto["id
     status: occupiedSeats >= room.settings.seatCount ? "Full" : "Seats open",
     full: occupiedSeats >= room.settings.seatCount,
   };
-}
-
-function formatSeatPlayer(player: { playerId: PlayerDto["id"]; displayName: PlayerDto["displayName"] }, hostPlayerId: PlayerDto["id"]): string {
-  return player.playerId === hostPlayerId ? `${player.displayName} · host` : player.displayName;
 }
 
 function bestBuyInForPlayer(room: RoomDto, playerId: PlayerDto["id"]) {

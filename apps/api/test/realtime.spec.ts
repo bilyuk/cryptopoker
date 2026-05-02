@@ -60,18 +60,20 @@ describe("realtime Room and Player events", () => {
       });
 
       const roomUpdated = once(hostSocket, REALTIME_EVENTS.roomUpdated);
-      await verifyAndSeat(server, hostCookie, firstCookie, roomId, 100, 1);
+      // Host is already at Seat 1 (auto). first auto-seats at Seat 2 on approve.
+      await verify(server, hostCookie, firstCookie, roomId, 100);
       await expect(roomUpdated).resolves.toEqual(expect.objectContaining({ roomId }));
 
-      await verifyAndSeat(server, hostCookie, secondCookie, roomId, 120, 2);
+      // Heads-up room is now full. second auto-waitlists at #1. third auto-waitlists at #2.
+      await verify(server, hostCookie, secondCookie, roomId, 120);
       await verify(server, hostCookie, thirdCookie, roomId, 140);
-      await request(server).post("/waitlist/join").set("Cookie", thirdCookie).send({ roomId }).expect(201);
-      const secondOfferPrompt = once(secondSocket, REALTIME_EVENTS.seatOfferCreated, 200);
-      const thirdOfferPrompt = once(thirdSocket, REALTIME_EVENTS.seatOfferCreated);
+      const secondOfferPrompt = once(secondSocket, REALTIME_EVENTS.seatOfferCreated);
+      const thirdOfferPrompt = once(thirdSocket, REALTIME_EVENTS.seatOfferCreated, 200);
       await request(server).post("/seats/leave").set("Cookie", firstCookie).send({ roomId }).expect(201);
 
-      await expect(thirdOfferPrompt).resolves.toEqual(expect.objectContaining({ roomId }));
-      await expect(secondOfferPrompt).rejects.toThrow("Timed out");
+      // FIFO: second was waitlisted before third, so second gets the Seat Offer.
+      await expect(secondOfferPrompt).resolves.toEqual(expect.objectContaining({ roomId }));
+      await expect(thirdOfferPrompt).rejects.toThrow("Timed out");
     } finally {
       await app.close();
     }
@@ -90,19 +92,6 @@ function readSetCookie(header: string | string[] | undefined): string[] {
 
 async function join(server: Parameters<typeof request>[0], cookie: string, inviteCode: string): Promise<void> {
   await request(server).post(`/invite-links/${inviteCode}/join`).set("Cookie", cookie).expect(201);
-}
-
-async function verifyAndSeat(
-  server: Parameters<typeof request>[0],
-  hostCookie: string,
-  playerCookie: string,
-  roomId: string,
-  amount: number,
-  seatNumber: number,
-): Promise<void> {
-  const buyIn = await request(server).post("/buy-ins").set("Cookie", playerCookie).send({ roomId, amount }).expect(201);
-  await request(server).post(`/buy-ins/${buyIn.body.buyIn.id}/approve`).set("Cookie", hostCookie).expect(201);
-  await request(server).post("/seats/claim").set("Cookie", playerCookie).send({ roomId, seatNumber }).expect(201);
 }
 
 async function verify(server: Parameters<typeof request>[0], hostCookie: string, playerCookie: string, roomId: string, amount: number): Promise<void> {

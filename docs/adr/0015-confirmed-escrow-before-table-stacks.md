@@ -1,0 +1,5 @@
+# Confirmed escrow before Table Stacks
+
+Blockchain-backed Buy-Ins create Table Stacks only after the escrow contract emits a confirmed funding event for the expected Room, Player, and USDC amount. Crediting a Table Stack from a signed wallet prompt or pending transaction would recreate the screenshot-trust problem on-chain, so the backend should listen to contract events, replay missed events after reconnect or restart, and wait for a policy-driven Base confirmation threshold before marking the Buy-In as Escrowed. The service should not wait for L1 settlement; the UX cost is a short Funding Hold instead of letting unconfirmed funds affect seating or poker state.
+
+The v1 default is `ESCROW_CONFIRMATIONS=2`, applied uniformly by the escrow listener and seating logic. A transaction's containing block counts as confirmation 1, so a funding event in block `txBlock` is confirmed when `currentBlock - txBlock + 1 >= ESCROW_CONFIRMATIONS`; future per-amount tuning should be expressed as a confirmations-required policy without changing the contract or event flow.

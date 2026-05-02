@@ -1,0 +1,7 @@
+# Room Settlement Keys for automatic checkout
+
+Blockchain-backed Rooms will support automatic Checkout by having the Room Host delegate a per-Room Settlement Key rather than requiring a host wallet signature for every payout. The delegated key keeps the Room Host as the payout trust root while allowing the backend to relay and pay gas for Checkout transactions; the accepted v1 trade-off is operating a per-Room hot key, with on-chain scope enforcement limiting compromise blast radius to that Room and an upgrade path to a managed signing service.
+
+The contract must enforce the scope of every delegated payout: the delegate is registered for the Room, the delegation has not expired or been revoked, the payout message is EIP-712 typed data for the exact Room, Player, amount, and nonce, and the payout does not violate Room Solvency. The v1 default delegation TTL is `ROOM_DELEGATION_TTL_HOURS=24`, each Room gets its own delegate key, Hosts can revoke delegation on-chain, and the Settler may relay Host-signed delegation registration without gaining unilateral payout authority.
+
+Room Solvency is enforced automatically by contract accounting rather than by requiring the Host to refresh delegation after each new Escrowed Buy-In. Deposits increase a Room's escrowed pool, cancellations and refunds reduce it, payouts must stay within it, and an optional Host-set delegation ceiling may further limit a delegate as defense-in-depth without becoming a per-deposit host-signature flow.

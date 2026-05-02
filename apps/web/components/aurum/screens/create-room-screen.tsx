@@ -94,7 +94,7 @@ export function CreateRoomScreen({ playerName, onCancel, onCreate, onSignOut }: 
           </p>
           {values.mode === "blockchain-backed" && (
             <p className="mt-2 text-xs text-sapphire-300">
-              Host delegation notice: checkout payouts are authorized by the Room Host (or delegated Room Settlement Key), while custody stays in on-chain escrow.
+              Host delegation notice: you may delegate a Room Settlement Key for automatic checkouts (default 24h scope per Room), and you remain responsible for revoking or rotating it if trust changes.
             </p>
           )}
           <div className="mt-7 grid gap-3 sm:grid-cols-[0.9fr_1.5fr] md:ml-auto md:max-w-sm">

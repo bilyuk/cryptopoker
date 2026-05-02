@@ -1,15 +1,20 @@
 import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  type EscrowDelegationDomainDto,
   type EscrowLedgerEntryDto,
   type EscrowPlayerLedgerBalanceDto,
   type EscrowTransferQueueRecordDto,
   type FailEscrowTransferRequest,
   type FinalizeEscrowTransferRequest,
   type QueueEscrowTransferRequest,
+  type RegisterRoomSettlementDelegationRequest,
   type RecordHandSettlementRequest,
+  type RevokeRoomSettlementDelegationRequest,
+  type RoomSettlementDelegationRecordDto,
   type RoomCloseoutReconciliationRequest,
   type RoomCloseoutReconciliationResultDto,
+  type ValidateEscrowPayoutAuthorizationRequest,
 } from "@cryptopoker/contracts";
 import { ESCROW_FOUNDATION_PLAN, type EscrowFoundationPlan } from "./escrow.types.js";
 
@@ -26,6 +31,7 @@ export class EscrowService {
   private readonly transferIdByIdempotencyKey = new Map<string, string>();
   private readonly processedEscrowEvents = new Set<string>();
   private readonly processedTxHashes = new Set<string>();
+  private readonly roomDelegationByRoom = new Map<string, RoomSettlementDelegationRecordDto>();
 
   getFoundationPlan(): EscrowFoundationPlan {
     return ESCROW_FOUNDATION_PLAN;
@@ -192,6 +198,111 @@ export class EscrowService {
     };
   }
 
+  registerRoomSettlementDelegation(request: RegisterRoomSettlementDelegationRequest): RoomSettlementDelegationRecordDto {
+    const hostWalletAddress = normalizeWalletAddress(request.hostWalletAddress);
+    const signerWalletAddress = normalizeWalletAddress(request.signerWalletAddress);
+    const delegateWalletAddress = normalizeWalletAddress(request.delegateWalletAddress);
+    const contractAddress = normalizeWalletAddress(request.contractAddress);
+    const ttlHours = request.ttlHours ?? 24;
+
+    if (ttlHours <= 0) {
+      throw new BadRequestException({ code: "DELEGATION_TTL_INVALID", message: "Delegation TTL must be greater than zero hours." });
+    }
+    if (hostWalletAddress !== signerWalletAddress) {
+      throw new BadRequestException({ code: "DELEGATION_SIGNER_INVALID", message: "Delegation must be signed by the Room Host wallet." });
+    }
+    this.assertDelegationDomain(request.signatureDomain, request.chainId, contractAddress);
+
+    const now = request.issuedAt ? new Date(request.issuedAt) : new Date();
+    if (Number.isNaN(now.getTime())) {
+      throw new BadRequestException({ code: "DELEGATION_ISSUED_AT_INVALID", message: "Delegation issuedAt must be a valid ISO datetime." });
+    }
+
+    const expiresAt = new Date(now.getTime() + ttlHours * 60 * 60 * 1000);
+    if (expiresAt.getTime() <= Date.now()) {
+      throw new BadRequestException({ code: "DELEGATION_EXPIRED", message: "Delegation expiry must be in the future." });
+    }
+
+    const record: RoomSettlementDelegationRecordDto = {
+      roomId: request.roomId,
+      hostWalletAddress,
+      delegateWalletAddress,
+      contractAddress,
+      chainId: request.chainId,
+      signerWalletAddress,
+      signatureDomain: request.signatureDomain,
+      issuedAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+      revokedAt: null,
+      revokeReason: null,
+    };
+    this.roomDelegationByRoom.set(request.roomId, record);
+    return { ...record };
+  }
+
+  revokeRoomSettlementDelegation(request: RevokeRoomSettlementDelegationRequest): RoomSettlementDelegationRecordDto {
+    const current = this.roomDelegationByRoom.get(request.roomId);
+    if (!current) {
+      throw new NotFoundException({ code: "DELEGATION_NOT_FOUND", message: "No active Room Settlement Key delegation exists for this Room." });
+    }
+
+    const hostWalletAddress = normalizeWalletAddress(request.hostWalletAddress);
+    const signerWalletAddress = normalizeWalletAddress(request.signerWalletAddress);
+    if (current.hostWalletAddress !== hostWalletAddress || current.hostWalletAddress !== signerWalletAddress) {
+      throw new BadRequestException({ code: "DELEGATION_REVOKE_SIGNER_INVALID", message: "Only the Room Host can revoke the delegation." });
+    }
+
+    const revokedAt = request.revokedAt ? new Date(request.revokedAt) : new Date();
+    if (Number.isNaN(revokedAt.getTime())) {
+      throw new BadRequestException({ code: "DELEGATION_REVOKED_AT_INVALID", message: "Delegation revokedAt must be a valid ISO datetime." });
+    }
+
+    const updated: RoomSettlementDelegationRecordDto = {
+      ...current,
+      revokedAt: revokedAt.toISOString(),
+      revokeReason: request.reason?.trim() || "Host revoked delegation",
+    };
+    this.roomDelegationByRoom.set(request.roomId, updated);
+    return { ...updated };
+  }
+
+  validatePayoutAuthorization(request: ValidateEscrowPayoutAuthorizationRequest): {
+    roomId: string;
+    authorized: boolean;
+    authorizedBy: "host" | "delegate";
+  } {
+    if (request.amount <= 0) {
+      throw new BadRequestException({ code: "PAYOUT_AMOUNT_INVALID", message: "Payout authorization amount must be greater than zero." });
+    }
+    if (!request.nonce.trim()) {
+      throw new BadRequestException({ code: "PAYOUT_NONCE_REQUIRED", message: "Payout authorization nonce is required." });
+    }
+
+    const signerWalletAddress = normalizeWalletAddress(request.signerWalletAddress);
+    const roomDelegation = this.roomDelegationByRoom.get(request.roomId);
+    if (!roomDelegation) {
+      throw new BadRequestException({ code: "DELEGATION_NOT_FOUND", message: "No Room Settlement Key delegation exists for this Room." });
+    }
+    if (signerWalletAddress === roomDelegation.hostWalletAddress) {
+      return { roomId: request.roomId, authorized: true, authorizedBy: "host" };
+    }
+
+    const isExpired = new Date(roomDelegation.expiresAt).getTime() <= Date.now();
+    if (isExpired || roomDelegation.revokedAt) {
+      throw new BadRequestException({ code: "DELEGATION_INACTIVE", message: "Room Settlement Key delegation is expired or revoked." });
+    }
+
+    const contractAddress = normalizeWalletAddress(request.contractAddress);
+    if (roomDelegation.chainId !== request.chainId || roomDelegation.contractAddress !== contractAddress) {
+      throw new BadRequestException({ code: "DELEGATION_SCOPE_MISMATCH", message: "Delegation is not valid for this contract or chain." });
+    }
+    if (signerWalletAddress !== roomDelegation.delegateWalletAddress) {
+      throw new BadRequestException({ code: "DELEGATION_SIGNER_INVALID", message: "Payout signer is not the active Room Settlement Key delegate." });
+    }
+
+    return { roomId: request.roomId, authorized: true, authorizedBy: "delegate" };
+  }
+
   private queueTransfer(type: TransferType, request: QueueEscrowTransferRequest): EscrowTransferQueueRecordDto {
     const knownTransferId = this.transferIdByIdempotencyKey.get(request.idempotencyKey);
     if (knownTransferId) {
@@ -317,6 +428,18 @@ export class EscrowService {
     }
     return undefined;
   }
+
+  private assertDelegationDomain(domain: EscrowDelegationDomainDto, chainId: number, contractAddress: string): void {
+    if (domain.name !== "CryptopokerEscrow" || domain.version !== "1") {
+      throw new BadRequestException({ code: "DELEGATION_DOMAIN_INVALID", message: "Delegation EIP-712 domain name/version is invalid." });
+    }
+    if (domain.chainId !== chainId) {
+      throw new BadRequestException({ code: "DELEGATION_DOMAIN_CHAIN_MISMATCH", message: "Delegation EIP-712 domain chainId does not match." });
+    }
+    if (normalizeWalletAddress(domain.verifyingContract) !== contractAddress) {
+      throw new BadRequestException({ code: "DELEGATION_DOMAIN_CONTRACT_MISMATCH", message: "Delegation EIP-712 verifyingContract does not match." });
+    }
+  }
 }
 
 function roundMoney(value: number): number {
@@ -325,4 +448,8 @@ function roundMoney(value: number): number {
 
 function isZero(value: number): boolean {
   return Math.abs(value) < 1e-9;
+}
+
+function normalizeWalletAddress(walletAddress: string): string {
+  return walletAddress.trim().toLowerCase();
 }

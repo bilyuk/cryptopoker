@@ -2,6 +2,7 @@ import { Body, Controller, Headers, Inject, Param, Post } from "@nestjs/common";
 import type {
   BuyInResponse,
   EscrowDepositEventRequest,
+  EscrowLockEventRequest,
   EscrowRefundEventRequest,
   RequestBuyInRequest,
 } from "@cryptopoker/contracts";
@@ -61,5 +62,25 @@ export class BuyInsController {
   @Post("/escrow/events/refunds")
   confirmEscrowRefund(@Body() body: EscrowRefundEventRequest): BuyInResponse {
     return { buyIn: this.lobby.confirmEscrowRefund(body.eventId, body.buyInId, body.txHash) };
+  }
+
+  @Post("/escrow/events/locks")
+  confirmEscrowLock(@Body() body: EscrowLockEventRequest): BuyInResponse {
+    return {
+      buyIn: this.lobby.confirmEscrowLock(
+        body.eventId,
+        body.buyInId,
+        body.txHash,
+        body.blockNumber,
+        body.currentBlockNumber,
+        body.reverted,
+      ),
+    };
+  }
+
+  @Post("/buy-ins/:buyInId/unlock-orphan")
+  unlockOrphan(@Headers("cookie") cookieHeader: string | undefined, @Param("buyInId") buyInId: string): BuyInResponse {
+    const player = currentPlayerFromCookie(this.sessions, cookieHeader).require();
+    return { buyIn: this.lobby.unlockOrphanLock(player, buyInId) };
   }
 }

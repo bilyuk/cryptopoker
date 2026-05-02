@@ -15,6 +15,11 @@ export type RoomSettingsDto = {
     maxTotalBuyIn: number;
     antiRatholing: boolean;
     noRake: boolean;
+    compliance?: {
+      allowedJurisdictions: string[];
+      publicAccess: "closed-alpha" | "public-disabled" | "public-enabled";
+      screeningMode: "allow-unchecked" | "require-clear";
+    };
   } | null;
 };
 
@@ -35,6 +40,8 @@ export type BuyInDto = {
     | "rejected"
     | "funding-pending"
     | "escrow-funded"
+    | "lock-pending"
+    | "escrow-locked"
     | "funding-failed"
     | "in-play"
     | "refund-pending"
@@ -111,9 +118,24 @@ export type WalletPreflightResponse = {
     requiredStablecoin: "USDC" | null;
     connectedNetwork: "base" | "other" | null;
     connectedStablecoin: "USDC" | "other" | null;
-    status: "ready" | "wallet-required" | "wrong-chain" | "unsupported-token";
+    jurisdiction: string | null;
+    allowedJurisdictions: string[];
+    ageAttested: boolean;
+    legalLocationAttested: boolean;
+    trustModelDisclosureRequired: boolean;
+    status:
+      | "ready"
+      | "wallet-required"
+      | "wrong-chain"
+      | "unsupported-token"
+      | "launch-disabled"
+      | "jurisdiction-blocked"
+      | "age-attestation-required"
+      | "location-attestation-required"
+      | "wallet-screening-blocked";
     fundingAllowed: boolean;
     noRake: boolean;
+    blockedReason: string | null;
   };
 };
 
@@ -131,6 +153,15 @@ export type EscrowRefundEventRequest = {
   buyInId: string;
   txHash: string;
   blockNumber: number;
+};
+
+export type EscrowLockEventRequest = {
+  eventId: string;
+  buyInId: string;
+  txHash: string;
+  blockNumber: number;
+  currentBlockNumber: number;
+  reverted?: boolean;
 };
 
 export type RoomCommandRequest = {

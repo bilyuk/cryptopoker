@@ -23,6 +23,9 @@ export class LobbyStore {
     blockNumber: number;
     reverted: boolean;
   }>();
+  private readonly pendingEscrowLocks = new Map<string, {
+    seatNumber: number;
+  }>();
   private lastEscrowProcessedBlockNumber = 0;
 
   constructor(
@@ -213,9 +216,36 @@ export class LobbyStore {
     roomId: string,
     connectedNetwork: "base" | "other" | null,
     connectedStablecoin: "USDC" | "other" | null,
+    jurisdiction: string | null,
+    ageAttested: boolean,
+    legalLocationAttested: boolean,
+    walletScreening: "clear" | "blocked" | "unchecked",
   ): WalletPreflightResponse["preflight"] {
     const room = this.requireJoinedRoom(player, roomId);
     const mode = room.settings.mode ?? "host-verified";
+    const compliance = room.settings.blockchain?.compliance;
+    const noRake = room.settings.blockchain?.noRake ?? true;
+    const blocked = (
+      status: WalletPreflightResponse["preflight"]["status"],
+      blockedReason: string,
+    ): WalletPreflightResponse["preflight"] => ({
+      roomMode: mode,
+      connectedWalletAddress: player.walletAddress ?? null,
+      boundWalletAddress: player.walletAddress ?? null,
+      requiredNetwork: mode === "blockchain-backed" ? "base" : null,
+      requiredStablecoin: mode === "blockchain-backed" ? "USDC" : null,
+      connectedNetwork,
+      connectedStablecoin,
+      jurisdiction,
+      allowedJurisdictions: compliance?.allowedJurisdictions ?? [],
+      ageAttested,
+      legalLocationAttested,
+      trustModelDisclosureRequired: mode === "blockchain-backed",
+      status,
+      fundingAllowed: false,
+      noRake,
+      blockedReason,
+    });
     if (mode === "host-verified") {
       return {
         roomMode: mode,
@@ -225,53 +255,42 @@ export class LobbyStore {
         requiredStablecoin: null,
         connectedNetwork,
         connectedStablecoin,
+        jurisdiction,
+        allowedJurisdictions: [],
+        ageAttested,
+        legalLocationAttested,
+        trustModelDisclosureRequired: false,
         status: "ready",
         fundingAllowed: true,
         noRake: true,
+        blockedReason: null,
       };
     }
 
+    if (compliance?.publicAccess === "public-disabled") {
+      return blocked("launch-disabled", "Public access is disabled pending legal review.");
+    }
+    if (!jurisdiction || !(compliance?.allowedJurisdictions ?? []).includes(jurisdiction)) {
+      return blocked("jurisdiction-blocked", "This jurisdiction is not currently allow-listed.");
+    }
+    if (!ageAttested) {
+      return blocked("age-attestation-required", "Age attestation is required before funding.");
+    }
+    if (!legalLocationAttested) {
+      return blocked("location-attestation-required", "Legal-location attestation is required before funding.");
+    }
+    if (compliance?.screeningMode === "require-clear" && walletScreening !== "clear") {
+      return blocked("wallet-screening-blocked", "Wallet-risk or sanctions screening blocked funding.");
+    }
+
     if (!player.walletAddress) {
-      return {
-        roomMode: mode,
-        connectedWalletAddress: null,
-        boundWalletAddress: null,
-        requiredNetwork: "base",
-        requiredStablecoin: "USDC",
-        connectedNetwork,
-        connectedStablecoin,
-        status: "wallet-required",
-        fundingAllowed: false,
-        noRake: room.settings.blockchain?.noRake ?? true,
-      };
+      return blocked("wallet-required", "Connect a wallet before funding this Blockchain-Backed Room.");
     }
     if (connectedNetwork !== "base") {
-      return {
-        roomMode: mode,
-        connectedWalletAddress: player.walletAddress,
-        boundWalletAddress: player.walletAddress,
-        requiredNetwork: "base",
-        requiredStablecoin: "USDC",
-        connectedNetwork,
-        connectedStablecoin,
-        status: "wrong-chain",
-        fundingAllowed: false,
-        noRake: room.settings.blockchain?.noRake ?? true,
-      };
+      return blocked("wrong-chain", "Switch your Connected Wallet to Base before funding.");
     }
     if (connectedStablecoin !== "USDC") {
-      return {
-        roomMode: mode,
-        connectedWalletAddress: player.walletAddress,
-        boundWalletAddress: player.walletAddress,
-        requiredNetwork: "base",
-        requiredStablecoin: "USDC",
-        connectedNetwork,
-        connectedStablecoin,
-        status: "unsupported-token",
-        fundingAllowed: false,
-        noRake: room.settings.blockchain?.noRake ?? true,
-      };
+      return blocked("unsupported-token", "Use native USDC before funding this Blockchain-Backed Room.");
     }
 
     return {
@@ -282,9 +301,15 @@ export class LobbyStore {
       requiredStablecoin: "USDC",
       connectedNetwork,
       connectedStablecoin,
+      jurisdiction,
+      allowedJurisdictions: compliance?.allowedJurisdictions ?? [],
+      ageAttested,
+      legalLocationAttested,
+      trustModelDisclosureRequired: true,
       status: "ready",
       fundingAllowed: true,
-      noRake: room.settings.blockchain?.noRake ?? true,
+      noRake,
+      blockedReason: null,
     };
   }
 
@@ -316,6 +341,9 @@ export class LobbyStore {
     }
     buyIn.status = reverted ? "funding-failed" : "escrow-funded";
     buyIn.fundedAt = new Date().toISOString();
+    if (!reverted) {
+      this.requestEscrowLockIfSeatOpen(room, buyIn.id);
+    }
     this.processedEscrowEvents.add(eventId);
     this.processedEscrowTransactions.add(txHash);
     this.pendingEscrowDeposits.delete(eventId);
@@ -385,6 +413,72 @@ export class LobbyStore {
     buyIn.refundedAt = new Date().toISOString();
     this.processedEscrowEvents.add(eventId);
     this.processedEscrowTransactions.add(txHash);
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+  }
+
+  confirmEscrowLock(
+    eventId: string,
+    buyInId: string,
+    txHash: string,
+    blockNumber: number,
+    currentBlockNumber: number,
+    reverted = false,
+  ): BuyInDto {
+    const confirmations = currentBlockNumber - blockNumber + 1;
+    if (confirmations < 2) {
+      const { buyIn } = this.requireBuyIn(buyInId);
+      return { ...buyIn };
+    }
+    if (this.processedEscrowEvents.has(eventId) || this.processedEscrowTransactions.has(txHash)) {
+      const { buyIn } = this.requireBuyIn(buyInId);
+      return { ...buyIn };
+    }
+
+    const { room, buyIn } = this.requireBuyIn(buyInId);
+    if (buyIn.status !== "lock-pending") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only lock-pending Buy-Ins can be lock-confirmed." });
+    }
+
+    const pendingLock = this.pendingEscrowLocks.get(buyInId);
+    if (!pendingLock) {
+      throw new BadRequestException({ code: "LOCK_NOT_PENDING", message: "No pending escrow lock exists for this Buy-In." });
+    }
+
+    this.processedEscrowEvents.add(eventId);
+    this.processedEscrowTransactions.add(txHash);
+    this.lastEscrowProcessedBlockNumber = Math.max(this.lastEscrowProcessedBlockNumber, blockNumber);
+
+    if (reverted) {
+      buyIn.status = "escrow-funded";
+      this.pendingEscrowLocks.delete(buyInId);
+      return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+    }
+
+    buyIn.status = "escrow-locked";
+    const seat = room.seats.find((candidate) => candidate.seatNumber === pendingLock.seatNumber);
+    if (seat && seat.playerId === null) {
+      seat.playerId = buyIn.playerId;
+      seat.tableStack = totalLockedStack(room, buyIn.playerId);
+      removePlayerFromWaitlist(room, buyIn.playerId);
+      this.pendingEscrowLocks.delete(buyInId);
+      return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+    }
+
+    // Keep escrow locked for explicit orphan-unlock recovery by the Settler.
+    return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+  }
+
+  unlockOrphanLock(actor: PlayerDto, buyInId: string): BuyInDto {
+    const { room, buyIn } = this.requireBuyIn(buyInId);
+    this.assertHost(actor, room);
+    if (buyIn.status !== "escrow-locked") {
+      throw new BadRequestException({ code: "BUY_IN_STATUS_INVALID", message: "Only escrow-locked Buy-Ins can be orphan-unlocked." });
+    }
+    if (room.seats.some((seat) => seat.playerId === buyIn.playerId)) {
+      throw new BadRequestException({ code: "PLAYER_ALREADY_SEATED", message: "Cannot orphan-unlock escrow while the Player is seated." });
+    }
+    buyIn.status = "escrow-funded";
+    this.pendingEscrowLocks.delete(buyInId);
     return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
   }
 
@@ -484,6 +578,19 @@ export class LobbyStore {
     }
     return { id: member.playerId, displayName: member.displayName };
   }
+
+  private requestEscrowLockIfSeatOpen(room: RoomRecord, buyInId: string): void {
+    const buyIn = room.buyIns.find((entry) => entry.id === buyInId);
+    if (!buyIn || buyIn.status !== "escrow-funded") return;
+    if (room.seats.some((seat) => seat.playerId === buyIn.playerId)) return;
+    if (this.pendingEscrowLocks.has(buyIn.id)) return;
+
+    const seatNumber = lowestOpenSeatWithoutPendingOffer(room);
+    if (seatNumber === undefined) return;
+
+    buyIn.status = "lock-pending";
+    this.pendingEscrowLocks.set(buyIn.id, { seatNumber });
+  }
 }
 
 function lowestOpenSeatWithoutPendingOffer(room: RoomRecord): number | undefined {
@@ -514,4 +621,14 @@ function removePlayerFromSeatAndWaitlist(room: RoomRecord, playerId: string): vo
     }
   }
   room.waitlist = room.waitlist.filter((entry) => entry.playerId !== playerId).map((entry, index) => ({ ...entry, position: index + 1 }));
+}
+
+function removePlayerFromWaitlist(room: RoomRecord, playerId: string): void {
+  room.waitlist = room.waitlist.filter((entry) => entry.playerId !== playerId).map((entry, index) => ({ ...entry, position: index + 1 }));
+}
+
+function totalLockedStack(room: RoomRecord, playerId: string): number {
+  return room.buyIns
+    .filter((buyIn) => buyIn.playerId === playerId && (buyIn.status === "host-verified" || buyIn.status === "escrow-locked" || buyIn.status === "in-play"))
+    .reduce((total, buyIn) => total + buyIn.amount, 0);
 }

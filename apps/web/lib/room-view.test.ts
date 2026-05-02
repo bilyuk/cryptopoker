@@ -160,7 +160,7 @@ function buyIn(
   id: string,
   playerId: string,
   amount: number,
-  status: "funding-pending" | "escrow-funded" | "in-play" | "refund-pending" | "refunded" | "expired",
+  status: "funding-pending" | "escrow-funded" | "lock-pending" | "escrow-locked" | "in-play" | "refund-pending" | "refunded" | "expired",
 ) {
   return {
     id,

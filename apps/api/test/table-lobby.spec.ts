@@ -122,7 +122,31 @@ describe("Escrow-backed room entry", () => {
 
       room = await currentRoom(server, hostCookie);
       const firstBuyIn = room.room.buyIns.find((buyIn: { playerId: string }) => buyIn.playerId === playerIdOf(room.room, "first"));
-      expect(firstBuyIn.status).toBe("escrow-funded");
+      expect(firstBuyIn.status).toBe("lock-pending");
+      expect(room.room.seats[1].playerId).toBeNull();
+
+      await request(server)
+        .post("/escrow/events/locks")
+        .send({
+          eventId: "evt-lock-1",
+          buyInId: firstBuyIn.id,
+          txHash: "tx-lock-1",
+          blockNumber: 130,
+          currentBlockNumber: 131,
+        })
+        .expect(201);
+
+      room = await currentRoom(server, hostCookie);
+      const firstAfterLock = room.room.buyIns.find((buyIn: { playerId: string }) => buyIn.playerId === playerIdOf(room.room, "first"));
+      expect(firstAfterLock.status).toBe("escrow-locked");
+      expect(room.room.seats[1].playerId).toBe(playerIdOf(room.room, "first"));
+      expect(room.room.seats[1].tableStack).toBe(1200);
+
+      await request(server)
+        .post(`/buy-ins/${firstAfterLock.id}/refund`)
+        .set("Cookie", firstGuestCookie)
+        .expect(400)
+        .expect(({ body }) => expect(body.code).toBe("BUY_IN_STATUS_INVALID"));
 
       const secondPending = await request(server)
         .post("/buy-ins")
@@ -149,18 +173,25 @@ describe("Escrow-backed room entry", () => {
       const server = app.getHttpServer();
       const hostCookie = await createPlayer(server, "host");
       const guestCookie = await createPlayer(server, "guest");
+      const guestTwoCookie = await createPlayer(server, "guest-two");
       const created = await request(server).post("/rooms").set("Cookie", hostCookie).send(blockchainHeadsUpSettings).expect(201);
       const roomId = created.body.room.id;
       await join(server, guestCookie, created.body.room.inviteCode);
+      await join(server, guestTwoCookie, created.body.room.inviteCode);
       await linkWallet(server, guestCookie);
+      await linkWallet(server, guestTwoCookie);
 
       const pending = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1500 }).expect(201);
+      const pendingTwo = await request(server).post("/buy-ins").set("Cookie", guestTwoCookie).send({ roomId, amount: 1400 }).expect(201);
       const fundingReference = pending.body.buyIn.fundingReference;
+      const fundingReferenceTwo = pendingTwo.body.buyIn.fundingReference;
 
       const firstConfirm = await confirmDeposit(server, fundingReference, "evt-dup", "tx-dup");
       const secondConfirm = await confirmDeposit(server, fundingReference, "evt-dup", "tx-dup");
-      expect(firstConfirm.body.buyIn.status).toBe("escrow-funded");
-      expect(secondConfirm.body.buyIn.status).toBe("escrow-funded");
+      expect(firstConfirm.body.buyIn.status).toBe("lock-pending");
+      expect(secondConfirm.body.buyIn.status).toBe("lock-pending");
+      const secondGuestConfirm = await confirmDeposit(server, fundingReferenceTwo, "evt-dup-2", "tx-dup-2");
+      expect(secondGuestConfirm.body.buyIn.status).toBe("lock-pending");
 
       const toExpire = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1700 }).expect(201);
       await request(server).post(`/buy-ins/${toExpire.body.buyIn.id}/expire`).set("Cookie", hostCookie).expect(201);
@@ -176,6 +207,40 @@ describe("Escrow-backed room entry", () => {
         .send({ eventId: "evt-refund", buyInId: toExpire.body.buyIn.id, txHash: "tx-refund", blockNumber: 123, currentBlockNumber: 123 })
         .expect(201);
       expect(refunded.body.buyIn.status).toBe("refunded");
+
+      const firstLock = await request(server)
+        .post("/escrow/events/locks")
+        .send({
+          eventId: "evt-lock-guest-1",
+          buyInId: pending.body.buyIn.id,
+          txHash: "tx-lock-guest-1",
+          blockNumber: 140,
+          currentBlockNumber: 141,
+        })
+        .expect(201);
+      expect(firstLock.body.buyIn.status).toBe("escrow-locked");
+
+      const lockedWithoutSeat = await request(server)
+        .post("/escrow/events/locks")
+        .send({
+          eventId: "evt-lock-orphan",
+          buyInId: pendingTwo.body.buyIn.id,
+          txHash: "tx-lock-orphan",
+          blockNumber: 142,
+          currentBlockNumber: 143,
+        })
+        .expect(201);
+      expect(lockedWithoutSeat.body.buyIn.status).toBe("escrow-locked");
+
+      const roomAfterOrphan = await currentRoom(server, hostCookie);
+      const guestTwoId = playerIdOf(roomAfterOrphan.room, "guest-two");
+      expect(roomAfterOrphan.room.seats.some((seat: { playerId: string | null }) => seat.playerId === guestTwoId)).toBe(false);
+
+      const orphanUnlocked = await request(server)
+        .post(`/buy-ins/${pendingTwo.body.buyIn.id}/unlock-orphan`)
+        .set("Cookie", hostCookie)
+        .expect(201);
+      expect(orphanUnlocked.body.buyIn.status).toBe("escrow-funded");
     } finally {
       await app.close();
     }

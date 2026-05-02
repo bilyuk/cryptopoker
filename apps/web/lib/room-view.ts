@@ -96,6 +96,8 @@ function bestBuyInForPlayer(room: RoomDto, playerId: PlayerDto["id"]) {
   const playerBuyIns = room.buyIns.filter((buyIn) => buyIn.playerId === playerId);
   return (
     playerBuyIns.find((buyIn) => buyIn.status === "in-play") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "escrow-locked") ??
+    playerBuyIns.find((buyIn) => buyIn.status === "lock-pending") ??
     playerBuyIns.find((buyIn) => buyIn.status === "escrow-funded") ??
     playerBuyIns.find((buyIn) => buyIn.status === "funding-failed") ??
     playerBuyIns.find((buyIn) => buyIn.status === "funding-pending") ??

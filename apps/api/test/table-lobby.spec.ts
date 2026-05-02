@@ -129,7 +129,7 @@ describe("Escrow-backed room entry", () => {
       expect(firstConfirm.body.buyIn.status).toBe("escrow-funded");
       expect(secondConfirm.body.buyIn.status).toBe("escrow-funded");
 
-      const toExpire = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1700 }).expect(201);
+      const toExpire = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1000 }).expect(201);
       await request(server).post(`/buy-ins/${toExpire.body.buyIn.id}/expire`).set("Cookie", hostCookie).expect(201);
 
       const refundedPending = await request(server)
@@ -160,10 +160,13 @@ describe("Escrow-backed room entry", () => {
       const guestTwoCookie = await createPlayer(server, "guest-two");
 
       const created = await request(server).post("/rooms").set("Cookie", hostCookie).send({
-        ...blockchainHeadsUpSettings,
+        ...headsUpSettings,
         blockchain: {
-          ...blockchainHeadsUpSettings.blockchain,
+          network: "base",
+          stablecoin: "USDC",
           maxTotalBuyIn: 4_300,
+          antiRatholing: true,
+          noRake: true,
         },
       }).expect(201);
       const roomId = created.body.room.id;
@@ -176,17 +179,6 @@ describe("Escrow-backed room entry", () => {
       await confirmDeposit(server, initialBuyIn.body.buyIn.fundingReference, "evt-topup-initial", "tx-topup-initial");
       let room = await currentRoom(server, hostCookie);
       const guestId = playerIdOf(room.room, "guest");
-      let guestBuyIn = room.room.buyIns.find((buyIn: { playerId: string }) => buyIn.playerId === guestId);
-      await request(server)
-        .post("/escrow/events/locks")
-        .send({
-          eventId: "evt-topup-lock-initial",
-          buyInId: guestBuyIn.id,
-          txHash: "tx-topup-lock-initial",
-          blockNumber: 300,
-          currentBlockNumber: 301,
-        })
-        .expect(201);
 
       const unseatedPending = await request(server).post("/buy-ins").set("Cookie", guestTwoCookie).send({ roomId, amount: 1_000 }).expect(201);
       await confirmDeposit(server, unseatedPending.body.buyIn.fundingReference, "evt-topup-unseated", "tx-topup-unseated");
@@ -204,7 +196,10 @@ describe("Escrow-backed room entry", () => {
       await confirmDeposit(server, topUpTwo.body.buyIn.fundingReference, "evt-topup-2", "tx-topup-2");
 
       room = await currentRoom(server, hostCookie);
-      const pendingTopUps = room.room.buyIns.filter((buyIn: { playerId: string; status: string }) => buyIn.playerId === guestId && buyIn.status === "escrow-funded");
+      const pendingTopUps = room.room.buyIns.filter(
+        (buyIn: { id: string; status: string }) =>
+          (buyIn.id === topUpOne.body.buyIn.id || buyIn.id === topUpTwo.body.buyIn.id) && buyIn.status === "escrow-funded",
+      );
       const guestSeatBeforeSettlement = room.room.seats.find((seat: { playerId: string | null }) => seat.playerId === guestId);
       expect(pendingTopUps).toHaveLength(2);
       expect(guestSeatBeforeSettlement.tableStack).toBe(1_500);

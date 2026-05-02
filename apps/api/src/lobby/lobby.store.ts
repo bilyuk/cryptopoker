@@ -349,6 +349,10 @@ export class LobbyStore {
     this.processedEscrowEvents.add(eventId);
     this.processedEscrowTransactions.add(txHash);
 
+    if (room.seats.some((seat) => seat.playerId === buyIn.playerId)) {
+      return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+    }
+
     const buyInPlayer = this.roomPlayerDto(room, buyIn.playerId);
     const seatNumber = lowestOpenSeatWithoutPendingOffer(room);
     const seatingResult = seatNumber !== undefined

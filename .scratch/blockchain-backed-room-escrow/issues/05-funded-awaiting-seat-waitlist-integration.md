@@ -1,6 +1,6 @@
 # Funded Awaiting Seat and Waitlist Integration
 
-Status: ready-for-human
+Status: needs-info
 Type: AFK
 
 ## Parent
@@ -68,3 +68,12 @@ Validation commands run:
 - `pnpm -C apps/api test -- table-lobby.spec.ts`
 - `pnpm -C apps/web test -- room-view.test.ts`
 - `pnpm -C apps/web test -- unverified-foyer`
+
+### 2026-05-02 — Mergeability blocker
+https://github.com/bilyuk/cryptopoker/pull/12
+
+Attempted to reconcile `plan/cry-120-blockchain-room-escrow` with `origin/main` to clear PR mergeability (`mergeStateStatus: DIRTY`), but merge produced broad conflicts across many unrelated files (API lobby, web room screens, contracts, and tests), indicating cross-ticket branch drift.
+
+Merge was safely aborted (`git merge --abort`) to avoid landing accidental regressions.
+
+Unblock request: branch owner/release owner should define a coordinated integration order (or provide a refreshed issue-scoped branch) before CRY-129 can be finalized on this branch.

@@ -23,3 +23,4 @@ Let a Room Host delegate a scoped **Room Settlement Key** for one **Blockchain-B
 ## Blocked by
 
 - [04 - Lock-Before-Seat Escrow Seating](04-lock-before-seat-escrow-seating.md)
+- 2026-05-02 (heartbeat): PR #14 remains open for CRY-131 and ready for reviewer handoff. No CI checks are configured on this branch; local contract typecheck and API tests remain green from latest run.

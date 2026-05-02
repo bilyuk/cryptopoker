@@ -1,6 +1,6 @@
 # Smart Wallet Compatibility Hardening
 
-Status: needs-triage
+Status: in_progress
 Type: AFK
 
 ## Parent
@@ -25,3 +25,7 @@ Harden EIP-1271 smart-wallet support for Player and Host signatures using real s
 - [02 - Base Sepolia Escrow Funding Tracer](02-base-sepolia-escrow-funding-tracer.md)
 - [07 - Room Settlement Key Delegation](07-room-settlement-key-delegation.md)
 - [08 - Host-Arbitrated Checkout and Receipts](08-host-arbitrated-checkout-receipts.md)
+
+## Comments
+- https://github.com/bilyuk/cryptopoker/pull/11
+- 2026-05-02 (agent): Continuation heartbeat update for CRY-138. Smart-wallet compatibility hardening implementation and tests were completed and pushed in commit `9a53aea` on branch `feat/cry-139-compliance-no-rake`, with tracker update commit `582f5ef`. Validation run there: `pnpm --filter @cryptopoker/api test -- escrow-delegation.spec.ts escrow-checkout.spec.ts escrow-failsafe.spec.ts`, `pnpm --filter @cryptopoker/contracts build`, `pnpm --filter @cryptopoker/api typecheck`. This current worktree is a different branch baseline, so I did not reapply those commits here to avoid cross-issue regressions.

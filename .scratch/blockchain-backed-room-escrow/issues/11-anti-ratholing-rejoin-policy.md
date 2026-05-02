@@ -24,3 +24,10 @@ Enforce default-on, Host-configurable **Anti-Ratholing** when a checked-out Play
 ## Blocked by
 
 - [08 - Host-Arbitrated Checkout and Receipts](08-host-arbitrated-checkout-receipts.md)
+
+### 2026-05-02 - Engineer Follow-up
+https://github.com/bilyuk/cryptopoker/pull/11
+
+Tried to split CRY-135 into a clean `main`-based branch, but `origin/main` is behind the current escrow/lobby stack (hard cherry-pick conflicts, including files deleted on `main` that this change must modify). Keeping this ticket on PR #11 to preserve a valid build/test base.
+
+Blocking owner: repo maintainers to confirm whether `main` should be fast-forwarded to the current integration baseline, or whether CRY-135 should intentionally stay on this active feature stream.

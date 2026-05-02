@@ -8,6 +8,7 @@ export type Room = {
   id: string;
   inviteCode?: string;
   hostPlayerId: string;
+  hasStarted: boolean;
   hostName: string;
   name: string;
   variant: string;

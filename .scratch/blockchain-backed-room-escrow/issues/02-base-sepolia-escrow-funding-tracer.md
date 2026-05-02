@@ -46,3 +46,14 @@ Additional validation run:
 - `pnpm --filter @cryptopoker/api test`
 - `pnpm --filter @cryptopoker/web test`
 - `pnpm -w typecheck`
+
+### 2026-05-02 - Engineer update (post-merge closure)
+https://github.com/bilyuk/cryptopoker/pull/10
+
+PR is merged to `main` and CRY-126 acceptance criteria are fully implemented and validated. No additional code changes required in this heartbeat; posting closure note to keep tracker continuity explicit.
+
+Final validation references from merged branch:
+- `pnpm --filter @cryptopoker/escrow-contracts test`
+- `pnpm --filter @cryptopoker/api test`
+- `pnpm --filter @cryptopoker/web test`
+- `pnpm -w typecheck`

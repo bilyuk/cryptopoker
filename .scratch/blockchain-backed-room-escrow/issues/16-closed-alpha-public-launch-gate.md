@@ -1,6 +1,6 @@
 # Closed Alpha and Public Launch Gate
 
-Status: needs-triage
+Status: in_progress
 Type: HITL
 
 ## Parent
@@ -37,3 +37,7 @@ Create the release gate for moving from Base Sepolia testnet to Base mainnet clo
 - [13 - Solvency Replay and Monitoring](13-solvency-replay-monitoring.md)
 - [14 - Smart Wallet Compatibility Hardening](14-smart-wallet-compatibility-hardening.md)
 - [15 - Compliance Gates and No-Rake Launch Controls](15-compliance-gates-no-rake-launch-controls.md)
+
+## Comments
+
+- 2026-05-02 (agent): Blockers resolved. The launch-stage model is already present in the API/contracts layer, so this follow-up adds the explicit release runbook covering rollback, pause, Settlement Frozen, Emergency Exit, and support-evidence procedures required by the ticket acceptance criteria.

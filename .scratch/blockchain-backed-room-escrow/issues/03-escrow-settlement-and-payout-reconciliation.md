@@ -1,6 +1,6 @@
 # Escrow Settlement and Payout Reconciliation
 
-Status: in_review
+Status: done
 
 ## Parent
 
@@ -83,3 +83,9 @@ QA request:
   - `POST /escrow/transfers/finalize`
   - `GET /escrow/:roomId/ledger`
   - `POST /escrow/rooms/:roomId/reconcile-closeout`
+
+### 2026-05-02T20:38:01Z — Engineer closeout
+
+https://github.com/bilyuk/cryptopoker/pull/10
+
+Paperclip wake indicates blockers are resolved and this issue is now `done`. Local issue tracker status is aligned to `done` with implementation and QA handoff already recorded above.

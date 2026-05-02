@@ -1,6 +1,6 @@
 # Web Typecheck Fails Due to Missing React Type Declarations
 
-Status: ready-for-agent
+Status: ready-for-human
 
 Category: bug
 
@@ -31,3 +31,4 @@ Category: bug
 ## Comments
 
 - 2026-05-01 (agent): Started CRY-112. Reproducing `pnpm typecheck` failure in `@cryptopoker/web` and preparing dependency/type fix.
+- 2026-05-01 (agent): Added `@types/react` and `@types/react-dom` to `@cryptopoker/web` devDependencies, reran `pnpm typecheck` successfully, pushed branch `cry-111-dev-setup-docs`, and opened PR: https://github.com/bilyuk/cryptopoker/pull/5

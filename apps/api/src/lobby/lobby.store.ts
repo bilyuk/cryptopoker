@@ -171,6 +171,16 @@ export class LobbyStore {
     if (room.buyIns.some((existing) => existing.playerId === player.id && (existing.status === "funding-pending" || existing.status === "pending"))) {
       throw new BadRequestException({ code: "BUY_IN_PENDING", message: "A funding-pending Buy-In already exists for this Player in this Room." });
     }
+    if (room.settings.mode === "blockchain-backed") {
+      const maxTotalBuyIn = room.settings.blockchain?.maxTotalBuyIn ?? room.settings.buyInMax;
+      const existingTotal = totalCommittedBuyIn(room, player.id);
+      if (existingTotal + amount > maxTotalBuyIn) {
+        throw new BadRequestException({
+          code: "MAX_TOTAL_BUY_IN_EXCEEDED",
+          message: "Buy-In exceeds the Room maximum total Buy-In for this Player.",
+        });
+      }
+    }
 
     const now = Date.now();
     const buyIn: BuyInDto = {
@@ -199,6 +209,24 @@ export class LobbyStore {
       return this.commit(commandResult({ ...buyIn }, seatingResult.events));
     }
     return this.commit(commandResult({ ...buyIn }, [{ type: "room.updated", room: toRoomDto(room) }]));
+  }
+
+  applyPendingTopUps(roomId: string): BuyInDto[] {
+    const room = this.rooms.get(roomId);
+    if (!room) return [];
+    const applied: BuyInDto[] = [];
+    for (const buyIn of room.buyIns) {
+      if (buyIn.status !== "escrow-funded") continue;
+      const seat = room.seats.find((candidate) => candidate.playerId === buyIn.playerId);
+      if (!seat) continue;
+      buyIn.status = "in-play";
+      seat.tableStack = totalLockedStack(room, buyIn.playerId);
+      applied.push({ ...buyIn });
+    }
+    if (applied.length > 0) {
+      this.commit(commandResult(null, [{ type: "room.updated", room: toRoomDto(room) }]));
+    }
+    return applied;
   }
 
   walletPreflight(
@@ -498,4 +526,20 @@ function removePlayerFromSeatAndWaitlist(room: RoomRecord, playerId: string): vo
     }
   }
   room.waitlist = room.waitlist.filter((entry) => entry.playerId !== playerId).map((entry, index) => ({ ...entry, position: index + 1 }));
+}
+
+function removePlayerFromWaitlist(room: RoomRecord, playerId: string): void {
+  room.waitlist = room.waitlist.filter((entry) => entry.playerId !== playerId).map((entry, index) => ({ ...entry, position: index + 1 }));
+}
+
+function totalLockedStack(room: RoomRecord, playerId: string): number {
+  return room.buyIns
+    .filter((buyIn) => buyIn.playerId === playerId && (buyIn.status === "host-verified" || buyIn.status === "escrow-locked" || buyIn.status === "in-play"))
+    .reduce((total, buyIn) => total + buyIn.amount, 0);
+}
+
+function totalCommittedBuyIn(room: RoomRecord, playerId: string): number {
+  return room.buyIns
+    .filter((buyIn) => buyIn.playerId === playerId && buyIn.status !== "rejected" && buyIn.status !== "funding-failed" && buyIn.status !== "refunded" && buyIn.status !== "expired")
+    .reduce((total, buyIn) => total + buyIn.amount, 0);
 }

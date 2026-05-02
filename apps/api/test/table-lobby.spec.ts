@@ -147,6 +147,92 @@ describe("Escrow-backed room entry", () => {
       await app.close();
     }
   });
+
+  it("queues seated Top-Ups until hand settlement, enforces max total Buy-In, and applies multiple pending Top-Ups", async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const app = moduleRef.createNestApplication();
+    await app.init();
+
+    try {
+      const server = app.getHttpServer();
+      const hostCookie = await createPlayer(server, "host");
+      const guestCookie = await createPlayer(server, "guest");
+      const guestTwoCookie = await createPlayer(server, "guest-two");
+
+      const created = await request(server).post("/rooms").set("Cookie", hostCookie).send({
+        ...blockchainHeadsUpSettings,
+        blockchain: {
+          ...blockchainHeadsUpSettings.blockchain,
+          maxTotalBuyIn: 4_300,
+        },
+      }).expect(201);
+      const roomId = created.body.room.id;
+      await join(server, guestCookie, created.body.room.inviteCode);
+      await join(server, guestTwoCookie, created.body.room.inviteCode);
+      await linkWallet(server, guestCookie);
+      await linkWallet(server, guestTwoCookie);
+
+      const initialBuyIn = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1_500 }).expect(201);
+      await confirmDeposit(server, initialBuyIn.body.buyIn.fundingReference, "evt-topup-initial", "tx-topup-initial");
+      let room = await currentRoom(server, hostCookie);
+      const guestId = playerIdOf(room.room, "guest");
+      let guestBuyIn = room.room.buyIns.find((buyIn: { playerId: string }) => buyIn.playerId === guestId);
+      await request(server)
+        .post("/escrow/events/locks")
+        .send({
+          eventId: "evt-topup-lock-initial",
+          buyInId: guestBuyIn.id,
+          txHash: "tx-topup-lock-initial",
+          blockNumber: 300,
+          currentBlockNumber: 301,
+        })
+        .expect(201);
+
+      const unseatedPending = await request(server).post("/buy-ins").set("Cookie", guestTwoCookie).send({ roomId, amount: 1_000 }).expect(201);
+      await confirmDeposit(server, unseatedPending.body.buyIn.fundingReference, "evt-topup-unseated", "tx-topup-unseated");
+      const refundedPending = await request(server)
+        .post(`/buy-ins/${unseatedPending.body.buyIn.id}/refund`)
+        .set("Cookie", guestTwoCookie)
+        .expect(201);
+      expect(refundedPending.body.buyIn.status).toBe("refund-pending");
+
+      await request(server).post(`/rooms/${roomId}/deal-first-hand`).set("Cookie", hostCookie).expect(201);
+
+      const topUpOne = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1_000 }).expect(201);
+      await confirmDeposit(server, topUpOne.body.buyIn.fundingReference, "evt-topup-1", "tx-topup-1");
+      const topUpTwo = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1_000 }).expect(201);
+      await confirmDeposit(server, topUpTwo.body.buyIn.fundingReference, "evt-topup-2", "tx-topup-2");
+
+      room = await currentRoom(server, hostCookie);
+      const pendingTopUps = room.room.buyIns.filter((buyIn: { playerId: string; status: string }) => buyIn.playerId === guestId && buyIn.status === "escrow-funded");
+      const guestSeatBeforeSettlement = room.room.seats.find((seat: { playerId: string | null }) => seat.playerId === guestId);
+      expect(pendingTopUps).toHaveLength(2);
+      expect(guestSeatBeforeSettlement.tableStack).toBe(1_500);
+
+      await request(server)
+        .post("/escrow/settlements/hands")
+        .send({
+          roomId,
+          handId: "hand-topup-1",
+          deltas: [
+            { playerId: created.body.room.hostPlayerId, delta: 50 },
+            { playerId: guestId, delta: -50 },
+          ],
+        })
+        .expect(201);
+
+      room = await currentRoom(server, hostCookie);
+      const guestSeatAfterSettlement = room.room.seats.find((seat: { playerId: string | null }) => seat.playerId === guestId);
+      const appliedTopUps = room.room.buyIns.filter((buyIn: { playerId: string; status: string }) => buyIn.playerId === guestId && buyIn.status === "in-play");
+      expect(appliedTopUps.length).toBeGreaterThanOrEqual(2);
+      expect(guestSeatAfterSettlement.tableStack).toBe(3_500);
+
+      const exceedsMax = await request(server).post("/buy-ins").set("Cookie", guestCookie).send({ roomId, amount: 1_000 }).expect(400);
+      expect(exceedsMax.body.code).toBe("MAX_TOTAL_BUY_IN_EXCEEDED");
+    } finally {
+      await app.close();
+    }
+  });
 });
 
 async function createPlayer(server: Parameters<typeof request>[0], displayName: string): Promise<string> {

@@ -1,6 +1,6 @@
 # Closed Alpha and Public Launch Gate
 
-Status: ready-for-human
+Status: in_progress
 Type: HITL
 
 ## Parent
@@ -41,8 +41,3 @@ Create the release gate for moving from Base Sepolia testnet to Base mainnet clo
 ## Comments
 
 - 2026-05-02 (agent): Blockers resolved. The launch-stage model is already present in the API/contracts layer, so this follow-up adds the explicit release runbook covering rollback, pause, Settlement Frozen, Emergency Exit, and support-evidence procedures required by the ticket acceptance criteria.
-
-### 2026-05-02 - Engineer update (status normalization)
-https://github.com/bilyuk/cryptopoker/pull/10
-
-CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

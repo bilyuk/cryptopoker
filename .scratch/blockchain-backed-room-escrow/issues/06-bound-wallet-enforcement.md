@@ -1,6 +1,6 @@
 # Bound Wallet Enforcement
 
-Status: ready-for-human
+Status: needs-triage
 Type: AFK
 
 ## Parent
@@ -24,10 +24,3 @@ Bind each Player to one **Bound Wallet** per **Blockchain-Backed Room**, enforce
 
 - [02 - Base Sepolia Escrow Funding Tracer](02-base-sepolia-escrow-funding-tracer.md)
 - [03 - Funding Holds, Late Confirmations, and Escrow Refunds](03-funding-holds-late-confirmations-escrow-refunds.md)
-
-## Comments
-
-### 2026-05-02 - Engineer update (status normalization)
-https://github.com/bilyuk/cryptopoker/pull/10
-
-CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

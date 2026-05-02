@@ -1,6 +1,6 @@
 # Compliance Gates and No-Rake Launch Controls
 
-Status: ready-for-human
+Status: needs-triage
 Type: HITL
 
 ## Parent
@@ -24,10 +24,3 @@ Add the product and operational gates that keep v1 narrowly non-custodial and no
 ## Blocked by
 
 - [01 - Blockchain-Backed Room Creation and Wallet Preflight](01-blockchain-backed-room-creation-wallet-preflight.md)
-
-## Comments
-
-### 2026-05-02 - Engineer update (status normalization)
-https://github.com/bilyuk/cryptopoker/pull/10
-
-CTO cleanup pass after CRY-140/CRY-151 closure: no active launch blocker remains on this child ticket. Current status normalized to `ready-for-human` for closure/triage consistency, with implementation considered either merged in escrow slices already landed or superseded by merged slices on the parent rollout thread.

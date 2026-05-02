@@ -1,0 +1,3 @@
+# API authority for blockchain escrow payouts
+
+Blockchain-backed Rooms will use native USDC on Base for escrow, but the API remains the authority for poker state, Table Stack accounting, and proposed checkout amounts. The escrow contract should not validate hands, pots, timers, or side-pot rules on-chain; however, payout settlement must require a Room Host signature over the exact Room, Player, amount, and nonce, with the backend acting as relay and gas payer rather than unilateral treasurer. This preserves the existing authoritative-game-server boundary for poker while keeping blockchain custody constrained by on-chain signature checks.

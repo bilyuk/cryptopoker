@@ -76,17 +76,93 @@ _Avoid_: Deleted room
 A **Room** where seated **Players** play No Limit Texas Hold'em hands with dollar-denominated **Table Stacks**.
 _Avoid_: Tournament, Omaha, limit poker
 
+**Blockchain-Backed Room**:
+A **Room** whose **Buy-Ins** and checkouts settle through on-chain escrow using native USDC on Base.
+_Avoid_: Multi-chain room, ETH room, token room
+
 **Buy-In**:
 The dollar-denominated amount a **Player** requests to convert into a **Table** stack.
 _Avoid_: Deposit, wallet balance
+
+**Top-Up**:
+An additional blockchain-backed **Buy-In** that increases a **Player**'s **Table Stack** in a **Blockchain-Backed Room**.
+_Avoid_: Re-buy, reload, deposit
+
+**Anti-Ratholing**:
+A **Room** policy that limits how quickly a checked-out **Player** can rejoin the same **Room** with a smaller **Buy-In**.
+_Avoid_: Cooldown, penalty, cashout lock
 
 **Host-Verified Buy-In**:
 A **Buy-In** approved by the **Room Host** after payment is handled outside the app.
 _Avoid_: Escrow, in-app payment
 
+**Escrowed Buy-In**:
+A **Buy-In** confirmed as funded in the on-chain escrow for a **Blockchain-Backed Room**.
+_Avoid_: Signed buy-in, pending transaction, wallet approval
+
+**Funding Hold**:
+A temporary **Seat** hold while a **Player**'s blockchain-backed **Buy-In** is waiting for escrow confirmation.
+_Avoid_: Reservation, Seat Offer, occupied Seat
+
+**Funded Awaiting Seat**:
+A **Player** state in a **Blockchain-Backed Room** where an **Escrowed Buy-In** exists but no **Seat** is currently occupied.
+_Avoid_: Failed funding, expired deposit, stranded funds
+
+**Escrow Refund**:
+A return of escrowed USDC to a **Player**'s **Connected Wallet** before that **Player** is seated.
+_Avoid_: Chargeback, reversal, payout
+
+**Connected Wallet**:
+A crypto wallet address controlled by a **Player** and used for blockchain-backed **Buy-Ins** and checkouts.
+_Avoid_: Account, app wallet, custodial wallet
+
+**Bound Wallet**:
+The **Connected Wallet** address locked to a **Player**'s deposits in one **Blockchain-Backed Room**.
+_Avoid_: Payout address, account wallet, default wallet
+
 **Table Stack**:
 The dollar-denominated chips a seated **Player** has available at the **Table**.
 _Avoid_: Bankroll, wallet balance
+
+**Checkout**:
+A **Player** request to leave a **Blockchain-Backed Room** and receive a USDC payout for their **Table Stack**.
+_Avoid_: Cashout, withdrawal, leaving a seat
+
+**Payout Authorization**:
+A **Room Host** signature authorizing an exact **Checkout** payout from a **Blockchain-Backed Room**.
+_Avoid_: Backend approval, admin payout, manual payment
+
+**Room Solvency**:
+The condition that a **Blockchain-Backed Room**'s escrowed USDC covers that **Room**'s unpaid checkout and refund obligations.
+_Avoid_: Platform balance, wallet balance, treasury balance
+
+**Host-Arbitrated Payouts**:
+The trust model where the **Room Host** authorizes checkout amounts for a **Blockchain-Backed Room**.
+_Avoid_: Trustless payouts, platform custody, automated arbitration
+
+**Room Settlement Key**:
+A scoped signing key delegated by the **Room Host** to authorize automatic **Checkout** payouts for one **Blockchain-Backed Room**.
+_Avoid_: Platform wallet, global payout key, admin key
+
+**Settlement Frozen**:
+A **Blockchain-Backed Room** state where normal **Checkout** payouts are suspended after settlement authority is revoked or unavailable.
+_Avoid_: Paused Room, Closed Room, deleted Room
+
+**Locked Escrow**:
+Escrowed USDC that has been converted into a seated **Player**'s **Table Stack**.
+_Avoid_: Locked wallet balance, committed deposit
+
+**Emergency Exit**:
+A self-service return of a **Player**'s remaining escrowed deposits from a **Settlement Frozen** **Blockchain-Backed Room** after a delay.
+_Avoid_: Dispute payout, arbitration, platform refund
+
+**Gas Share**:
+A **Player**'s equal share of backend-relayed on-chain transaction costs while their escrow is **Locked Escrow** in a **Blockchain-Backed Room**.
+_Avoid_: Platform fee, rake, host fee
+
+**Contract Room Lifecycle**:
+The fund-movement states of a **Blockchain-Backed Room** as tracked by the escrow contract.
+_Avoid_: Table lifecycle, Hand state, product Room lifecycle
 
 ## Relationships
 
@@ -98,6 +174,45 @@ _Avoid_: Bankroll, wallet balance
 - A **Room** is a **No Limit Texas Hold'em Cash Room** in version 1
 - A **Room** has exactly one **Table** in version 1
 - A **Room** has exactly one **Room Host**
+- A **Blockchain-Backed Room** uses native USDC on Base in the first blockchain-backed version
+- A **Blockchain-Backed Room** uses Circle's native USDC contract on Base, not bridged USDC variants
+- A **Blockchain-Backed Room** does not accept ETH, USDT, wrapped USDC, custom tokens, or multiple chains in the first blockchain-backed version
+- A **Blockchain-Backed Room** does not provide fiat on-ramps, fiat off-ramps, token swaps, custodial balances, or KYC collection in the first blockchain-backed version
+- A **Blockchain-Backed Room** still relies on the authoritative API for **Table Stack** accounting and checkout amounts
+- A **Blockchain-Backed Room** has a **Room Host** whose **Connected Wallet** authorizes payout settlement for that **Room**
+- A **Blockchain-Backed Room** uses **Host-Arbitrated Payouts**
+- A **Blockchain-Backed Room** must maintain **Room Solvency**
+- A **Blockchain-Backed Room** may define a per-**Player** maximum total **Buy-In** amount
+- A **Blockchain-Backed Room** may enforce **Anti-Ratholing** for the same **Player** rejoining the same **Room**
+- **Anti-Ratholing** is enabled by default for **Blockchain-Backed Rooms** and may be disabled by the **Room Host** at Room creation
+- A **Player** has at most one **Bound Wallet** per **Blockchain-Backed Room**
+- A **Bound Wallet** is established by the **Player**'s first escrowed funding action in that **Blockchain-Backed Room**
+- A **Bound Wallet** may be an externally owned wallet or a smart contract wallet
+- A **Player** may use different **Bound Wallets** in different **Blockchain-Backed Rooms**
+- **Room Solvency** is increased by **Escrowed Buy-Ins** and reduced by **Checkout** payouts and **Escrow Refunds**
+- A **Room Settlement Key** belongs to exactly one **Blockchain-Backed Room**
+- A **Room Settlement Key** is delegated by the **Room Host** and may expire or be revoked
+- A **Checkout** in a **Blockchain-Backed Room** pays native USDC to the **Player**'s **Connected Wallet**
+- A **Checkout** payout requires a **Payout Authorization** for the exact **Room**, **Player**, amount, and nonce
+- A **Checkout** payout for a **Blockchain-Backed Room** must be sent to the **Player**'s **Bound Wallet**
+- **Escrow Refunds** and **Emergency Exits** must be sent to the **Player**'s **Bound Wallet**
+- A **Payout Authorization** may be signed by the **Room Host** or by an active **Room Settlement Key** for that **Room**
+- A **Payout Authorization** must not violate **Room Solvency**
+- Revoking a **Room Settlement Key** may make a **Blockchain-Backed Room** **Settlement Frozen**
+- A **Settlement Frozen** **Blockchain-Backed Room** does not create new **Hands** or process normal **Checkouts**
+- A **Settlement Frozen** **Blockchain-Backed Room** may resume normal settlement if the **Room Host** delegates a new **Room Settlement Key** before **Emergency Exit** is available
+- **Emergency Exit** returns remaining escrowed deposits, not the **Player**'s current **Table Stack**
+- A **Blockchain-Backed Room** may be closed on-chain only after its escrowed USDC balance is zero
+- Backend-relayed on-chain transaction costs for a **Blockchain-Backed Room** are split equally through **Gas Shares**
+- A **Gas Share** applies only while the **Player** has **Locked Escrow** in the **Blockchain-Backed Room**
+- A **Gas Share** is calculated when the backend-relayed transaction is recorded for the **Blockchain-Backed Room**
+- A **Gas Share** is deducted from the **Player**'s **Checkout** payout or other escrow exit
+- A **Gas Share** does not change the **Player**'s **Table Stack** during play
+- A **Blockchain-Backed Room** charges no platform rake in the first blockchain-backed version
+- Public access to **Blockchain-Backed Rooms** requires jurisdiction allow-listing after legal review
+- A **Checkout** should not require the **Player** to submit a second wallet transaction after requesting it in the app
+- A **Checkout** may be requested during a **Live Hand**, but payout settlement waits until that **Hand** settles
+- A **Checkout** removes the **Player** from future **Hands** once requested
 - An **Invite Link** is not the same as the internal **Room** identifier
 - A **Room Host** may rotate the **Invite Link** without affecting already-present **Players**
 - A **Room Host** may edit **Room** settings before the first **Hand**
@@ -105,12 +220,33 @@ _Avoid_: Bankroll, wallet balance
 - A **Table** belongs to exactly one **Room**
 - A **Table** has a fixed number of **Seats**
 - A **Seat** is occupied by at most one **Player**
+- A **Funding Hold** may temporarily prevent other **Players** from claiming a **Seat**
+- A **Funding Hold** is not an occupied **Seat** and does not create a **Table Stack**
+- An **Escrowed Buy-In** remains valid if its **Funding Hold** expires before confirmation
+- A **Player** with an **Escrowed Buy-In** and no **Seat** is **Funded Awaiting Seat**
+- A **Player** who is **Funded Awaiting Seat** should be seated automatically when a **Seat** is open, otherwise placed on the **Waitlist**
+- A **Player** who is **Funded Awaiting Seat** may request an **Escrow Refund**
+- **Locked Escrow** cannot be cancelled through an **Escrow Refund**
+- **Locked Escrow** begins only after the escrow contract confirms the **Player**'s escrow has been locked for seating
+- A **Player** must not be dealt into a **Hand** until their escrow is **Locked Escrow**
+- **Sitting Out** does not unlock **Locked Escrow**
+- A seated **Player** may request a **Top-Up** only between **Hands**
+- A **Top-Up** requested during a **Live Hand** waits until that **Hand** settles
+- A seated **Player**'s confirmed **Top-Up** becomes **Locked Escrow** before increasing their **Table Stack**
+- Pending **Top-Ups** are visible to **Players** at the **Table**
+- **Anti-Ratholing** applies to **Checkout** followed by rejoining the same **Room**, not to **Top-Ups**
+- **Anti-Ratholing** uses the **Player**'s most recent **Checkout** amount in that **Room**
+- **Anti-Ratholing** is enforced before seating; it does not prevent **Escrow Refunds**
+- A **Room**'s maximum total **Buy-In** amount overrides **Anti-Ratholing** when the two conflict
 - A **Waitlist** belongs to exactly one **Room**
-- A **Player** may be on the **Waitlist** only when they have a **Host-Verified Buy-In** and do not occupy a **Seat** in that **Room**
+- A **Player** may be on the **Waitlist** only when they have a **Host-Verified Buy-In** or **Escrowed Buy-In** and do not occupy a **Seat** in that **Room**
 - A **Seat Offer** is made to the first eligible **Player** on the **Waitlist** when a **Seat** opens
 - A **Seat Offer** must be accepted before the **Player** occupies the **Seat**
 - A **Buy-In** must become a **Host-Verified Buy-In** before it creates a **Table Stack**
-- A **Player** must have a **Host-Verified Buy-In** before occupying a **Seat**
+- Blockchain-backed **Buy-Ins** require the **Player** to use a **Connected Wallet**
+- A blockchain-backed **Buy-In** must become an **Escrowed Buy-In** before it creates a **Table Stack**
+- A **Player** must have a **Host-Verified Buy-In** or **Escrowed Buy-In** before occupying a **Seat**
+- The app must not custody a **Player**'s funds or operate a **Connected Wallet** for a **Player**
 - A **Table Stack** exists only inside one **Room**
 - A **Room Host** may remove a **Player** only outside a **Live Hand**
 - A **Room Host** may not change cards, force another **Player**'s live action, or edit **Table Stacks** during a **Live Hand**
@@ -192,3 +328,21 @@ _Avoid_: Bankroll, wallet balance
 - "invite link" must not be treated as a public **Room** ID; it is the access mechanism for a private **Room**.
 - "waitlist" does not mean spectators or viewers; waitlisted **Players** are waiting for a **Seat** and cannot spectate the **Table**.
 - "escrow" is avoided in version 1 because the app does not custody funds; the canonical term is **Host-Verified Buy-In**.
+- **Host-Verified Buy-In** and **Escrowed Buy-In** are parallel buy-in modes; do not use host verification language for **Blockchain-Backed Rooms**.
+- A signed wallet request is not an **Escrowed Buy-In**; escrow requires on-chain confirmation.
+- **Funding Hold** expiration does not invalidate an **Escrowed Buy-In**; it only releases the specific **Seat** hold.
+- **Escrowed Buy-In** is an on-chain funding state; **Funded Awaiting Seat** is the product state for a funded **Player** without a **Seat**.
+- **Top-Up** is distinct from leaving and rejoining a **Room**.
+- **Anti-Ratholing** is a per-**Room** fairness policy, not a blockchain escrow rule.
+- A **Connected Wallet** may disconnect from the browser without changing the **Bound Wallet** for a **Blockchain-Backed Room**.
+- Changing **Bound Wallets** means completing **Checkout** and rejoining the **Room** with a different **Connected Wallet**.
+- "No rake" means the platform takes no percentage of pots, **Buy-Ins**, **Top-Ups**, or **Checkouts**.
+- "wallet" does not mean **Player** identity; when blockchain-backed funds are involved, use **Connected Wallet** for the crypto address controlled by the **Player**.
+- "checkout" is not the same as simply leaving a **Seat**; in a **Blockchain-Backed Room**, **Checkout** includes payout settlement.
+- The backend relays **Payout Authorizations** and pays gas; it must not be the unilateral authority for payouts.
+- A **Room Settlement Key** is a scoped delegate for one **Blockchain-Backed Room**, not a platform payout wallet.
+- **Room Solvency** belongs to one **Blockchain-Backed Room**; one **Room**'s escrowed USDC must not pay another **Room**'s obligations.
+- **Host-Arbitrated Payouts** means **Blockchain-Backed Rooms** are non-custodial against the platform, not trustless against the **Room Host**.
+- **Emergency Exit** is a fail-safe for broken settlement, not a way to adjudicate disputed **Table Stacks**.
+- **Gas Shares** are reimbursement for Room on-chain execution costs, not poker rake.
+- A **Contract Room Lifecycle** is separate from the product lifecycle of **Rooms**, **Tables**, and **Hands**.
